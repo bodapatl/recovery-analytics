@@ -8,7 +8,25 @@ window.DASH = {
   "headline": {
     "reported_claim": "+11% MoM recovery improvement",
     "verdict": "NOT REAL",
-    "verdict_detail": "The +11% is the Feb\u2192Mar bounce (gold +11.1%). Gold MoM averages 0.0% (Jan\u2192Jul = 0.0%), trend slope +0.02 Cr/month, 95% CI [\u22120.37, +0.42] Cr/mo, p = 0.88 \u2014 no detectable trend at n=7 months. Leave-one-out: every month can be dropped and the verdict holds. (No detectable trend \u2260 proof of no change.)",
+    "verdict_detail": "The +11% is the Feb\u2192Mar jump in MONTHLY totals \u2014 a calendar artifact of the 28-day February. Per-day recovery moves +0.2% Feb\u2192Mar and runs flat all year (\u20b90.584\u20130.609 \u20b9Cr/day, per-day slope \u22120.002, p = 0.27). Monthly gold slope +0.02 Cr/month, 95% CI [\u22120.37, +0.42] Cr/mo, p = 0.88 \u2014 no detectable trend at n=7; leave-one-out stable. (No detectable trend \u2260 proof of no change.)",
+    "gold_recovery_per_day_cr": [
+      0.604,
+      0.608,
+      0.609,
+      0.584,
+      0.595,
+      0.585,
+      0.604
+    ],
+    "days_in_month": [
+      31,
+      28,
+      31,
+      30,
+      31,
+      30,
+      31
+    ],
     "gold_recovery_cr": [
       18.72,
       17.01,
@@ -459,39 +477,52 @@ window.DASH = {
       "evidence_class": "exploratory",
       "verdict": "CI straddles zero: no detectable effect at this sample size; treat the design as exploratory until a geo-split or randomized rollout exists"
     },
+    "placebo_test": {
+      "method": "permutation placebo: 2,000 random arm-label swaps within the matched cells (seed 42); fraction of permuted DiDs at least as extreme as the real one",
+      "n_iterations": 2000,
+      "p_placebo": 1.0,
+      "verdict": "placebo swaps produce DiDs as extreme as the real one 100% of the time \u2014 consistent with the null; never quote this estimate without this p"
+    },
     "counterfactual_monthly_recovery_cr": 17.84,
-    "actual_monthly_recovery_apr_jul_cr": null
+    "actual_monthly_recovery_apr_jul_cr": null,
+    "variants": {
+      "matched_main_did_inr": 895.0,
+      "pooled_control_incl_mixed_did_inr": -70.0,
+      "unmatched_no_matching_did_inr": 378.0,
+      "n_mixed_dropped_from_main": 4809,
+      "verdict": "sign/magnitude consistent across the matched main spec, the unmatched spec and the pooled-mixed-control spec \u2014 arm choice does not create the null"
+    }
   },
   "counterfactual_pretrend": {
     "per_account_inr_by_month": {
       "legacy_only": {
-        "2026-01": 6471.7176540807095,
-        "2026-02": 5558.2741326067235,
-        "2026-03": 6289.5836927468545,
-        "2026-04": 5397.543836771771,
-        "2026-05": 6201.380874529645,
-        "2026-06": 5626.700211496034,
-        "2026-07": 6487.45309069677,
-        "2026-08": 1351.3077475022712
+        "2026-01": 6471.717654080705,
+        "2026-02": 5558.274132606725,
+        "2026-03": 6289.583692746859,
+        "2026-04": 5397.543836771768,
+        "2026-05": 6201.380874529652,
+        "2026-06": 5626.700211496043,
+        "2026-07": 6487.453090696772,
+        "2026-08": 1351.3077475022708
       },
       "modern_early": {
-        "2026-01": 6373.098080730167,
-        "2026-02": 5621.718975446715,
-        "2026-03": 6263.629526931482,
-        "2026-04": 5935.899650340656,
-        "2026-05": 5889.491443630282,
-        "2026-06": 5936.930584908088,
-        "2026-07": 5978.71714616275,
-        "2026-08": 1591.332153233064
+        "2026-01": 6373.09808073017,
+        "2026-02": 5621.718975446711,
+        "2026-03": 6263.629526931485,
+        "2026-04": 5935.899650340655,
+        "2026-05": 5889.491443630289,
+        "2026-06": 5936.930584908087,
+        "2026-07": 5978.717146162754,
+        "2026-08": 1591.3321532330626
       },
       "modern_late": {
-        "2026-01": 5830.5124408246365,
-        "2026-02": 5774.792533723595,
-        "2026-03": 6684.041620005092,
-        "2026-04": 5892.952996945788,
-        "2026-05": 6355.990259608044,
-        "2026-06": 6042.247412827687,
-        "2026-07": 6232.191767625354,
+        "2026-01": 5830.512440824642,
+        "2026-02": 5774.792533723591,
+        "2026-03": 6684.041620005093,
+        "2026-04": 5892.952996945797,
+        "2026-05": 6355.990259608042,
+        "2026-06": 6042.247412827701,
+        "2026-07": 6232.191767625352,
         "2026-08": 1538.2506261135145
       }
     },
@@ -562,6 +593,55 @@ window.DASH = {
       }
     ]
   },
+  "attribution_window_sensitivity": {
+    "definition": "% of golden cash with a last-RPC touch within W days (full months, RPC only)",
+    "coverage_pct_by_window": {
+      "7": 5.3,
+      "14": 10.0,
+      "30": 18.6,
+      "60": 30.3
+    },
+    "chosen_window_days": 14,
+    "comment": "coverage is not knife-edge: it moves smoothly with the window, so the 14d rule choice does not manufacture the unattributed-bulk finding"
+  },
+  "per_day_view": {
+    "months": [
+      "2026-01",
+      "2026-02",
+      "2026-03",
+      "2026-04",
+      "2026-05",
+      "2026-06",
+      "2026-07"
+    ],
+    "days_in_month": [
+      31,
+      28,
+      31,
+      30,
+      31,
+      30,
+      31
+    ],
+    "gold_recovery_per_day_cr": [
+      0.604,
+      0.608,
+      0.609,
+      0.584,
+      0.595,
+      0.585,
+      0.604
+    ],
+    "gold_per_day_mom_pct": [
+      0.7,
+      0.2,
+      -4.1,
+      1.9,
+      -1.7,
+      3.2
+    ]
+  },
+  "appendix": "reports/appendix_investment_and_counterfactual.md",
   "driver_matrix": "reports/driver_matrix.md",
   "metric_registry": "reports/metric_definitions.yml",
   "verify_report": "reports/verify_report.md",
@@ -578,7 +658,8 @@ window.DASH = {
           "base": 1.5,
           "upside": 3.0
         },
-        "roi_base": 0.8,
+        "gross_roi_base": 0.8,
+        "net_roi_base": -0.2,
         "breakeven_months_base": 16.0,
         "evidence": "Hypothesis \u2014 vendor connect-rate spread is only ~2.3 pp and no connect-rate\u2192cash elasticity is identified in this data; defer",
         "evidence_data_derived": false,
@@ -593,7 +674,8 @@ window.DASH = {
           "base": 4.0,
           "upside": 8.0
         },
-        "roi_base": 1.1,
+        "gross_roi_base": 1.1,
+        "net_roi_base": 0.1,
         "breakeven_months_base": 10.5,
         "evidence": "Correlation \u2014 agent-hour productivity is flat (\u20b916.4\u201317.0k/hr all year); marginal hours have no proven conversion; needs a randomized headcount pilot before committing",
         "evidence_data_derived": false,
@@ -608,7 +690,8 @@ window.DASH = {
           "base": 3.0,
           "upside": 5.0
         },
-        "roi_base": 1.2,
+        "gross_roi_base": 1.2,
+        "net_roi_base": 0.2,
         "breakeven_months_base": 10.0,
         "evidence": "Correlation \u2014 promising as an implementation lever inside the WhatsApp/digital build (concierge lifts response), but no isolated voice-bot evidence in this data",
         "evidence_data_derived": false,
@@ -623,7 +706,8 @@ window.DASH = {
           "base": 1.5,
           "upside": 4.0
         },
-        "roi_base": 1.0,
+        "gross_roi_base": 1.0,
+        "net_roi_base": null,
         "breakeven_months_base": 12.0,
         "evidence": "Correlation (null) \u2014 the exact-matched DiD found +\u20b9895/acct/mo, 95% CI [\u2212\u20b91,224, +\u20b93,013], p=0.40: no detectable targeting lift",
         "evidence_data_derived": false,
@@ -638,7 +722,8 @@ window.DASH = {
           "base": 13.2,
           "upside": 16.5
         },
-        "roi_base": 3.8,
+        "gross_roi_base": 3.8,
+        "net_roi_base": 2.8,
         "breakeven_months_base": 3.2,
         "evidence": "Strong \u2014 only channel with a cash-backed upward drift (2.5%\u21923.3% attributed share), unit cost ~3 orders of magnitude below voice (\u20b90.20/msg vs ~\u20b9740/attempt), funnel measured",
         "evidence_data_derived": true,
@@ -653,7 +738,8 @@ window.DASH = {
           "base": 2.0,
           "upside": 4.0
         },
-        "roi_base": 0.5,
+        "gross_roi_base": 0.5,
+        "net_roi_base": -0.5,
         "breakeven_months_base": 24.0,
         "evidence": "Correlation \u2014 3.2% of attributed cash from 25k visits; no cost source in contract (per-visit knob absent) so ROI cannot be sized",
         "evidence_data_derived": false,
@@ -684,6 +770,13 @@ window.DASH = {
       "held_for_geosplit_test_cr": 6.5,
       "geosplit": "2-month geo-split WA-scale test in ~3 states before releasing the remaining \u20b96 Cr"
     },
+    "full_10cr_program": {
+      "net_return_base_if_all_10_committed_today_cr": 3.2,
+      "net_roi_if_all_10_committed_today": 0.3,
+      "net_roi_deployment_scoped": 2.8,
+      "why_not_full_10_now": "the measured increment scales with MESSAGES, not rupees committed: \u20b910 Cr at \u20b90.20/msg \u2248 0.5e9 messages \u2248 0 years of current volume \u2014 extra cash buys reach that borrowers do not have. The measured upside is bounded by the 3x-reach scenario (attributed cash \u20b90.55 Cr/mo \u2192 ~\u20b91.65 Cr/mo). Spending \u20b910 Cr to buy it would drop net ROI to 0.3\u00d7; deploying \u20b93.5 Cr buys the same increment at 2.8\u00d7 net. The remaining \u20b96.5 Cr is released only if the geo-split test proves higher reach converts at scale."
+    },
+    "roi_convention": "net ROI = (base incremental \u2212 cost) / cost; gross multiples also reported",
     "wa_avg_monthly_cr": 0.55,
     "wa_share_start_pct": 2.47,
     "wa_share_end_pct": 3.34,

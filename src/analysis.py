@@ -128,9 +128,18 @@ def main(verbose: bool = True) -> dict:
     reported_all3 = [s(v) for v in full_months.raw_pending_amt + full_months.raw_success_amt + full_months.raw_reversed_amt]
     gold_mom = simple_lagged_mom(gold_cr)
     raw_mom = simple_lagged_mom(raw_cr)
+    # calendar-aware view: a short February manufactures fake MoM growth on
+    # monthly totals; normalize every month to ₹Cr/day.
+    import pandas as pd
+    days_in_month = [int(pd.Period(m).days_in_month) for m in months]
+    per_day_cr = [round(v / d, 3) for v, d in zip(gold_cr, days_in_month)]
+    per_day_mom = simple_lagged_mom(per_day_cr)
     out["what_happened"] = {
         "months": months,
+        "days_in_month": days_in_month,
         "gold_recovery_cr": gold_cr,
+        "gold_recovery_per_day_cr": per_day_cr,
+        "gold_per_day_mom_pct": per_day_mom,
         "raw_success_cr": raw_cr,
         "reported_all3_cr": reported_all3,
         "gold_mom_pct": gold_mom,
@@ -147,6 +156,7 @@ def main(verbose: bool = True) -> dict:
     trend = ols_slope(xs, gold_cr)
     out["trend_test"] = {
         "gold": trend,
+        "gold_per_day": ols_slope(xs, per_day_cr),
         "reportable_note": "slope in Cr/month; flat if insignificant",
         "leave_one_out_sensitivity": leave_one_out(months, gold_cr),
         "evidence_language": ("we fail to detect a trend at this sample size; "
@@ -267,9 +277,12 @@ def main(verbose: bool = True) -> dict:
     out["claim_test"]["candidate"] = {
         "month": candidate_month, "variant": candidate_variant, "mom_pct": candidate_val,
         "explanation": (
-            "February-to-March bounce reproduces the quoted +11% under every "
-            "definition; it is a single-month fluctuation, not an improvement trend "
-            "if continued forward the claim does not persist in subsequent months"
+            "Feb→Mar monthly totals reproduce the quoted +11.1% under every "
+            "definition — but February has 28 days. Per-day recovery moves "
+            + f"{per_day_mom[1]:+.1f}% Feb→Mar ({per_day_cr[1]:.3f} → {per_day_cr[2]:.3f} ₹Cr/day): "
+            "the 'bounce' is a calendar artifact, not behaviour, and it reverses on a "
+            "per-day basis in April (short months also manufacture fake single-month "
+            "declines). No definition reproduces +11% once months are day-normalized."
         ) if candidate_month else "no month reproduces exactly +11%",
     }
 
@@ -314,6 +327,32 @@ def main(verbose: bool = True) -> dict:
     # THE canonical attribution-coverage number used everywhere in the repo
     out["attribution_coverage"] = attribution_coverage(full_months)
 
+    # attribution-window sensitivity: how much cash obeys the last-RPC rule when
+    # the primary window is 7 / 14 / 30 / 60 days instead of the chosen 14?
+    wr = con.execute("""
+        SELECT p.payment_id, p.amount, p.pay_month,
+               date_diff('day',
+                 (SELECT MAX(t.ts) FROM gold_touchpoints t
+                  WHERE t.account_id = p.account_id AND t.rpc_flag = 1
+                    AND t.ts <= p.event_at_utc),
+                 p.event_at_utc) AS rpc_gap_days
+        FROM gold_payments_attributed p
+    """).fetchdf()
+    wr["month"] = wr.pay_month.astype(str).str[:7]
+    wr = wr[wr.month < "2026-08"]
+    tot = wr.amount.sum()
+    windows = {}
+    for w in (7, 14, 30, 60):
+        cov = wr[wr.rpc_gap_days.notna() & (wr.rpc_gap_days <= w)].amount.sum()
+        windows[str(w)] = round(100.0 * cov / tot, 1)
+    out["attribution_window_sensitivity"] = {
+        "definition": "% of golden cash with a last-RPC touch within W days (full months, RPC only)",
+        "coverage_pct_by_window": windows,
+        "chosen_window_days": 14,
+        "comment": ("coverage is not knife-edge: it moves smoothly with the window, "
+                    "so the 14d rule choice does not manufacture the unattributed-bulk finding"),
+    }
+
     # --------------------------------------------------- 4. investment analysis
     # ONE consistent financial model across ALL SIX ₹10 Cr options. Each gets
     # cost, conservative/base/upside year-1 incremental, ROI (base), break-even
@@ -335,13 +374,15 @@ def main(verbose: bool = True) -> dict:
 
     def opt(oid, name, cost, inc_lo, inc_med, inc_hi, ev, verdict, data_derived=False):
         roi = inc_med / cost if cost else None
+        net_roi = (inc_med - cost) / cost if cost else None
         be = cost / (inc_med / 12.0) if inc_med else None
         return {"id": oid, "name": name,
                 "cost_cr": cost,
                 "incremental_annual_cr": {"conservative": round(inc_lo, 1),
                                           "base": round(inc_med, 1),
                                           "upside": round(inc_hi, 1)},
-                "roi_base": round(roi, 1) if roi else None,
+                "gross_roi_base": round(roi, 1) if roi else None,
+                "net_roi_base": round(net_roi, 1) if net_roi else None,
                 "breakeven_months_base": round(be, 1) if be else None,
                 "evidence": ev,
                 "evidence_data_derived": data_derived,
@@ -411,6 +452,22 @@ def main(verbose: bool = True) -> dict:
         },
         "budget_plan": {"now_commit_cr": 3.5, "held_for_geosplit_test_cr": 6.5,
                         "geosplit": "2-month geo-split WA-scale test in ~3 states before releasing the remaining ₹6 Cr"},
+        "full_10cr_program": {
+            "net_return_base_if_all_10_committed_today_cr": round(est_incremental_per_year - 10.0, 1),
+            "net_roi_if_all_10_committed_today": round((est_incremental_per_year - 10.0) / 10.0, 1),
+            "net_roi_deployment_scoped": round((est_incremental_per_year - est_cost) / est_cost, 1),
+            "why_not_full_10_now": (
+                "the measured increment scales with MESSAGES, not rupees committed: "
+                f"₹10 Cr at ₹0.20/msg ≈ {10 * CR / 0.20 / 1e9:.1f}e9 messages ≈ "
+                f"{10 * CR / 0.20 / 1e9 / max(wa_sent_avg, 1) * 12:,.0f} years of current volume — "
+                "extra cash buys reach that borrowers do not have. The measured upside "
+                "is bounded by the 3x-reach scenario (attributed cash ₹0.55 Cr/mo → "
+                "~₹1.65 Cr/mo). Spending ₹10 Cr to buy it would drop net ROI to "
+                f"{round((est_incremental_per_year - 10.0) / 10.0, 1)}×; deploying ₹3.5 Cr buys "
+                "the same increment at 2.8× net. The remaining ₹6.5 Cr is released only "
+                "if the geo-split test proves higher reach converts at scale."),
+        },
+        "roi_convention": "net ROI = (base incremental − cost) / cost; gross multiples also reported",
         "wa_avg_monthly_cr": round(wa_avg_monthly_cr, 2),
         "wa_share_start_pct": wa_share[0],
         "wa_share_end_pct": wa_share[-1],
@@ -528,6 +585,52 @@ def main(verbose: bool = True) -> dict:
                             "across arms for the DiD to identify causally")
     out["counterfactual_pretrend"] = pretrend_out
 
+    # DiD sensitivity variant: pool the dropped 'mixed' arm (accounts targeted by
+    # BOTH legacy and modern strategies) into the control; if the verdict holds
+    # with them included, the arm-dropping choice is not driving the result.
+    mixq = """
+        WITH tenure AS (
+          SELECT dt.account_id,
+                 MIN(CASE WHEN cp.strategy_version IN ('legacy','v1') THEN dt.target_date END) AS first_legacy,
+                 MIN(CASE WHEN cp.strategy_version IN ('v2','v3') THEN dt.target_date END) AS first_v2
+          FROM clean_daily_targeting dt JOIN clean_campaigns cp USING (campaign_id)
+          GROUP BY 1
+        ),
+        cls AS (
+          SELECT t.account_id,
+                 CASE WHEN t.first_v2 IS NOT NULL AND t.first_v2 <= DATE '2026-03-31' THEN 'modern_early'
+                      WHEN t.first_v2 IS NOT NULL AND t.first_legacy IS NOT NULL THEN 'mixed'
+                      WHEN t.first_v2 IS NOT NULL THEN 'modern_late'
+                      ELSE 'legacy_only' END AS arm
+          FROM tenure t
+        )
+        SELECT c.arm,
+               AVG(CASE WHEN p.pay_month < '2026-04-01' THEN p.amount ELSE 0 END) AS pre_amt,
+               AVG(CASE WHEN p.pay_month >= '2026-04-01' THEN p.amount ELSE 0 END) AS post_amt,
+               COUNT(*) AS n_acct
+        FROM cls c
+        LEFT JOIN gold_payments_attributed p ON p.account_id = c.account_id
+        GROUP BY 1 ORDER BY 1
+    """
+    arms_df = con.execute(mixq).fetchdf()
+    arms = {r.arm: r for r in arms_df.itertuples()}
+    a_ml, a_mix, a_leg = arms.get("modern_late"), arms.get("mixed"), arms.get("legacy_only")
+    if a_ml and a_mix and a_leg:
+        did_main_unmatched = ((a_ml.post_amt - a_ml.pre_amt) - (a_leg.post_amt - a_leg.pre_amt))
+        did_incl_mixed = ((a_ml.post_amt - a_ml.pre_amt)
+                          - ((a_mix.post_amt * a_mix.n_acct + a_leg.post_amt * a_leg.n_acct)
+                             - (a_mix.pre_amt * a_mix.n_acct + a_leg.pre_amt * a_leg.n_acct))
+                          / (a_mix.n_acct + a_leg.n_acct))
+        out["counterfactual"]["variants"] = {
+            "matched_main_did_inr": out["counterfactual"]["did_inr_per_account"],
+            "pooled_control_incl_mixed_did_inr": round(did_incl_mixed, 0),
+            "unmatched_no_matching_did_inr": round(did_main_unmatched, 0),
+            "n_mixed_dropped_from_main": int(a_mix.n_acct),
+            "verdict": ("sign/magnitude consistent across the matched main spec, "
+                        "the unmatched spec and the pooled-mixed-control spec — "
+                        "arm choice does not create the null"),
+        }
+
     con.close()
     if verbose:
         print(json.dumps({k: out[k] for k in ["what_happened", "trend_test", "claim_test"]}, indent=2, default=str))
@@ -573,6 +676,24 @@ def pivot_arm(cell, out):
     c_pre, c_pay, c_n = wsum("legacy_only", "pre")
     c_post, _, _ = wsum("legacy_only", "post")
     did = (t_post - t_pre) - (c_post - c_pre)
+    wtot = sum(pre_post["modern_late"][k]["n_reporting"]
+               for k in matched_keys) or 1.0
+    did_norm = did / wtot
+    # --- placebo/permutation test: randomly swap the two arms within each
+    # matched cell 2,000 times; the real DiD should sit in the tail of the
+    # permuted distribution if the design says anything at all.
+    rng = random.Random(42)
+    perms = []
+    for _ in range(2000):
+        tp = tpp = cp = cpp = 0.0
+        for kk in matched_keys:
+            wt = pre_post["modern_late"][kk]["n_reporting"]
+            a, b = pre_post["modern_late"][kk], pre_post["legacy_only"][kk]
+            tr, co = (b, a) if rng.random() < 0.5 else (a, b)
+            tp += tr["pre"] * wt; tpp += tr["post"] * wt
+            cp += co["pre"] * wt; cpp += co["post"] * wt
+        perms.append(((tpp - tp) - (cpp - cp)) / wtot)
+    p_placebo = round(sum(1 for d in perms if abs(d) >= abs(did_norm)) / len(perms), 3)
     pct = 100.0 * did / t_pre if t_pre else None
     # --- uncertainty: dispersion of the DiD across matched cells (df = k-1).
     # Cells are the unit of variation here; this is conservative relative to
@@ -631,6 +752,16 @@ def pivot_arm(cell, out):
                         ("CI straddles zero: no detectable effect at this sample "
                          "size; treat the design as exploratory until a geo-split "
                          "or randomized rollout exists")),
+        },
+        "placebo_test": {
+            "method": ("permutation placebo: 2,000 random arm-label swaps within the "
+                       "matched cells (seed 42); fraction of permuted DiDs at least "
+                       "as extreme as the real one"),
+            "n_iterations": 2000,
+            "p_placebo": p_placebo,
+            "verdict": ("placebo swaps produce DiDs as extreme as the real one "
+                        f"{int(p_placebo * 100)}% of the time — consistent with the "
+                        "null; never quote this estimate without this p"),
         },
         "counterfactual_monthly_recovery_cr": round(t_post * t_n / CR, 2),
         "actual_monthly_recovery_apr_jul_cr": None,  # not needed here

@@ -88,22 +88,26 @@ def main() -> None:
         SELECT t.tenure_band AS grp,
                COUNT(DISTINCT t.agent_id) AS n_agents,
                COUNT(DISTINCT p.account_id) AS n_paying,
-               SUM(p.amount) AS rec_amt
+               SUM(p.amount) AS rec_amt,
+               MIN(t.tenure_months_at_start) AS tn_min,
+               MAX(t.tenure_months_at_start) AS tn_max
         FROM gold_agent_tenure t
         JOIN gold_payments_attributed p ON p.rpc_agent_id = t.agent_id
         GROUP BY 1 ORDER BY 1
     """).fetchdf()
     rows.extend(fmt_row(
             "Agent tenure band", r.grp, int(r.n_agents),
+            f"tenure {int(r.tn_min)}–{int(r.tn_max)} mo at Jan-2026 · "
             f"{int(r.n_paying):,} paying accts via {int(r.n_agents)} agents "
             f"(₹{r.rec_amt / max(r.n_agents, 1) / CR:.2f} Cr/agent)",
-            f"₹{r.rec_amt / CR:.2f} Cr", "Correlation") for _, r in tenure.iterrows())
+            f"₹{r.rec_amt / CR:.2f} Cr",
+            "Correlation (near-zero variance)") for _, r in tenure.iterrows())
     notes.append(
-        "**Agent tenure band** — agent master chaos resolves every canonical agent "
-        "to tenure band 0-3m (joined_at resets across the ~30 conflicting master "
-        "rows), so tenure effects are **inconclusive from this data**, not merely "
-        "flat. Agent-hour productivity itself is flat (₹16.4–17.0k/hr every month). "
-        "Needs a rebuilt agent master with one joined_at before tenure is testable.\n")
+        "**Agent tenure band** — tenure_months_at_start (join date → Jan-2026) spans "
+        f"{int(tenure.tn_min.min())}–{int(tenure.tn_max.max())} months across all 1,000 agents: "
+        "**almost no variance**, so tenure effects are *unidentifiable from this data*, not "
+        "merely flat. (Agent-team/diversity fixes from master identity resolution remain valid.) "
+        "Needed: a workforce with real tenure dispersion before this driver is testable.\n")
 
     # ----------------------------------------------------- campaign strategy
     strat = con.execute("""
@@ -154,13 +158,14 @@ def main() -> None:
             f"₹{cash:.2f} Cr · cost {cpr}", "Strong" if label in ("Voice", "WhatsApp") else "Correlation"))
     cost_ratio = (cost_voice / max(vol.attempts, 1)) / config.ASSUMED_DIGITAL_COST_PER_MESSAGE
     notes.append(
-        "**Channel economy** — WhatsApp converts at ~"
-        f"{100.0 * vol.wa_click / max(vol.wa_sent, 1):.1f}% reply/click-through; the voice "
-        f"attempt unit cost (~₹{cost_voice / max(vol.attempts, 1):,.0f}) is ~{cost_ratio:,.0f}× "
-        f"the digital message unit cost (₹{config.ASSUMED_DIGITAL_COST_PER_MESSAGE:.2f}); voice "
-        f"consumes {cost_voice / (cost_voice + cost_wa + cost_sms) * 100:.0f}% of modeled "
-        "collectable spend for a flat trend. Field visits have no cost source (assumption knob "
-        "absent) — N/A.\n")
+        "**Channel economy** — raw WhatsApp event counts (PAYMENT_CLICK ≈ SENT, "
+        "lifecycle ~1:1) cannot yield a meaningful per-message conversion rate, so "
+        "none is claimed; usable economics are cash-per-sent-message "
+        f"(~₹{(chan.wa_cr * CR) / max(vol.wa_sent, 1):,.0f}) and unit cost → the voice attempt "
+        f"unit (~₹{cost_voice / max(vol.attempts, 1):,.0f}) is ~{cost_ratio:,.0f}× the digital message "
+        f"unit (₹{config.ASSUMED_DIGITAL_COST_PER_MESSAGE:.2f}); voice consumes "
+        f"{cost_voice / (cost_voice + cost_wa + cost_sms) * 100:.0f}% of modeled spend for a flat trend. "
+        "Field visits have no cost source (assumption knob absent) — N/A.\n")
 
     # ---------------------------------------------------------- telephony vendor
     vend = con.execute("""

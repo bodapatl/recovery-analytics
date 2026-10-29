@@ -52,6 +52,7 @@ OLS slope on golden monthly recovery (Jan–Jul 2026; Aug is partial and exclude
 If the slope is indistinguishable from zero, the headline claim collapses."""),
 
     code("""import numpy as np
+import pandas as pd
 from scipy import stats
 
 full = mm[mm.month < '2026-08']
@@ -70,20 +71,31 @@ print(f"Golden monthly recovery (Cr): {[round(v/1e7,2) for v in y]}")
 print(f"OLS slope: {slope/1e7:+.3f} Cr/month, t = {t:+.2f}, df = {df}, "
       f"p = {p:.3f}, 95% CI = [{lo/1e7:+.3f}, {hi/1e7:+.3f}] Cr/mo")
 print(f"Power caveat: a true trend up to +{hi/1e7:+.2f} Cr/mo is not excluded by this CI.")
+# calendar-aware view: the quoted '+11% MoM' is manufactured by a 28-day February
+days = np.array([pd.Period(m).days_in_month for m in mm.month])[:len(full)]
+per_day = y / 1e7 / days
+pd_slope, pd_int = np.polyfit(xs, per_day, 1)
+pd_resid = per_day - (pd_int + pd_slope*xs)
+pd_se = np.sqrt((pd_resid**2).sum() / df / sxx)
+print()
+print(f"Per-day recovery (Cr/day): {[round(v,3) for v in per_day]}")
+print(f"Per-day Feb->Mar: {100*(per_day[2]/per_day[1]-1):+.1f}%  (the quoted '+11% MoM' on monthly totals)")
+print(f"Per-day OLS slope: {pd_slope:+.4f} Cr/day/month, p = {2*stats.t.sf(abs(pd_slope/pd_se), df):.2f} (flat)")
 print()
 print("MoM % (golden):", [round((mm.recovery_amt.iloc[i]/mm.recovery_amt.iloc[i-1]-1)*100,1)
                         for i in range(1, len(full))])
 print("MoM % (raw reported SUCCESS raw):", [round((mm.raw_success_amt.iloc[i]/mm.raw_success_amt.iloc[i-1]-1)*100,1)
                         for i in range(1, len(full))])"""),
 
-    md("""**Verdict: no detectable trend.** Golden trend = **+0.023 ₹Cr/month, 95% CI
-[−0.37, +0.42] Cr/mo, p = 0.88** — with **leave-one-out sensitivity: dropping any
-single month keeps the slope in [−0.09, +0.16] Cr/mo, all p > 0.4**
+    md("""**Verdict: no detectable trend — and the +11% is a calendar artifact.** Golden trend =
+**+0.023 ₹Cr/month, 95% CI [−0.37, +0.42] Cr/mo, p = 0.88**; **per-day recovery is
+flat** (Feb→Mar = +0.2% per day; the +11.1% on monthly totals is the 28-day February).
+**Leave-one-out sensitivity: dropping any single month keeps the slope in
+[−0.09, +0.16] Cr/mo, all p > 0.4**
 (`analysis_summary.json.trend_test.leave_one_out_sensitivity`). A sustained
 "+11% MoM" would need a slope of ≈ ₹2.1 Cr/month — far outside the CI.
-The **Feb→Mar bounce (+11.1%)** matches the quoted claim exactly; April reverses it (−7.3%).
-A one-month bounce is not an improvement. Honest caveat: n = 7 has low power — we
-falsify the *specific +11% claim*, not every possible slow trend. *(Classifier: Fact — from deterministic data.)*"""),
+Honest caveat: n = 7 has low power — we falsify the *specific +11% claim*,
+not every possible slow trend. *(Classifier: Fact — from deterministic data.)*"""),
 
     md("""## 2. Why? — forensic mechanisms that inflate the reported number
 
@@ -226,13 +238,29 @@ print(f"treatment pre  {t_pre:,.0f}  post {t_post:,.0f}")
 print(f"control   pre  {c_pre:,.0f}  post {c_post:,.0f}")
 print(f"DiD = +₹{did:,.0f} per targeted account/month (≈ {100*did/t_pre:+.1f}%)")
 print("Uncertainty: dispersion of the per-cell DiD -> 95% CI [₹-1,224, ₹+3,013], p = 0.40 (see analysis_summary.json)")
-print("Pre-trend check: Jan-Mar per-account slopes by arm -> counterfactual_pretrend in analysis_summary.json")"""),
+print("Pre-trend check: Jan-Mar per-account slopes by arm -> counterfactual_pretrend in analysis_summary.json")
+import json as _json, os as _os
+_p = "reports/analysis_summary.json" if _os.path.exists("reports/analysis_summary.json") \
+     else "../reports/analysis_summary.json"
+claim = _json.load(open(_p, encoding="utf-8"))
+pl = claim["counterfactual"]["placebo_test"]
+vr = claim["counterfactual"]["variants"]
+ws = claim["attribution_window_sensitivity"]["coverage_pct_by_window"]
+print(f"Placebo/permutation test: {pl['n_iterations']} random arm-swaps -> p_placebo = {pl['p_placebo']}")
+print(f"Spec variants: matched main +895 | unmatched +{vr['unmatched_no_matching_did_inr']:,.0f} | "
+      f"pooled control incl. mixed arm {vr['pooled_control_incl_mixed_did_inr']:,.0f}")
+print(f"Attribution-window sensitivity (last-RPC coverage %): 7d={ws['7']}  14d={ws['14']}  30d={ws['30']}  60d={ws['60']}")"""),
 
     md("""**DiD ≈ +₹895/account/month, 95% CI straddles zero — treated as exploratory null.**
 The "mid-year strategy change" did not move recovery beyond what matched legacy accounts did
-anyway. Pre-trend slopes are compared in `analysis_summary.json.counterfactual_pretrend` and a
-parallel-trends violation would invalidate the design — so this stays exploratory until a
-geo-split experiment. *(Correlation-level, weak.)*
+anyway. The null survives the placebo/permutation test (p = 1.00: random arm-label swaps
+produce DiDs this extreme 100% of the time), the unmatched spec and a pooled-control spec
+that folds the previously dropped 4,809-account 'mixed' arm into the control. Pre-trend
+slopes are compared in `analysis_summary.json.counterfactual_pretrend`; a parallel-trends
+violation would invalidate the design — so this stays exploratory until a geo-split
+experiment. Attribution-window sensitivity (RPC 7/14/30/60d → 5.3/10.0/18.6/30.3% coverage)
+shows the attribution finding is not knife-edge either.
+*(Correlation-level, weak.)*
 
 ## 4. Where the ₹10 Cr goes — all six options on one model
 

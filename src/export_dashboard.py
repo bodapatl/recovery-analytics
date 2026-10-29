@@ -51,12 +51,15 @@ def main() -> None:
             "reported_claim": "+11% MoM recovery improvement",
             "verdict": "NOT REAL",
             "verdict_detail": (
-                "The +11% is the Feb→Mar bounce (gold +11.1%). Gold MoM averages "
-                "0.0% (Jan→Jul = 0.0%), trend slope +0.02 Cr/month, 95% CI "
-                "[−0.37, +0.42] Cr/mo, p = 0.88 — no detectable trend at n=7 "
-                "months. Leave-one-out: every month can be dropped and the "
-                "verdict holds. (No detectable trend ≠ proof of no change.)"
+                "The +11% is the Feb→Mar jump in MONTHLY totals — a calendar "
+                "artifact of the 28-day February. Per-day recovery moves +0.2% "
+                "Feb→Mar and runs flat all year (₹0.584–0.609 ₹Cr/day, per-day "
+                "slope −0.002, p = 0.27). Monthly gold slope +0.02 Cr/month, "
+                "95% CI [−0.37, +0.42] Cr/mo, p = 0.88 — no detectable trend at "
+                "n=7; leave-one-out stable. (No detectable trend ≠ proof of no change.)"
             ),
+            "gold_recovery_per_day_cr": summary["what_happened"]["gold_recovery_per_day_cr"],
+            "days_in_month": summary["what_happened"]["days_in_month"],
             "gold_recovery_cr": gold,
             "raw_recovery_cr": raw,
             "months": months,
@@ -88,6 +91,11 @@ def main() -> None:
         "counterfactual": summary["counterfactual"],
         "counterfactual_pretrend": summary["counterfactual_pretrend"],
         "attribution_coverage": summary["attribution_coverage"],
+        "attribution_window_sensitivity": summary["attribution_window_sensitivity"],
+        "per_day_view": {k: summary["what_happened"][k] for k in
+                         ["months", "days_in_month", "gold_recovery_per_day_cr",
+                          "gold_per_day_mom_pct"]},
+        "appendix": "reports/appendix_investment_and_counterfactual.md",
         "driver_matrix": "reports/driver_matrix.md",
         "metric_registry": "reports/metric_definitions.yml",
         "verify_report": "reports/verify_report.md",

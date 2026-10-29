@@ -210,10 +210,10 @@ WHERE s.agent_id IS NOT NULL;
 
 CREATE OR REPLACE TABLE gold_agent_tenure AS
 SELECT agent_id,
-       DATE_DIFF('month', DATE '2026-01-01', CAST(joined_at AS DATE)) + 1 AS tenure_months_at_start,
-       CASE WHEN DATE_DIFF('month', DATE '2026-01-01', CAST(joined_at AS DATE)) + 1 <= 3 THEN '0-3m'
-            WHEN DATE_DIFF('month', DATE '2026-01-01', CAST(joined_at AS DATE)) + 1 <= 9 THEN '4-9m'
-            WHEN DATE_DIFF('month', DATE '2026-01-01', CAST(joined_at AS DATE)) + 1 <= 18 THEN '10-18m'
+       DATE_DIFF('month', CAST(joined_at AS DATE), DATE '2026-01-01') AS tenure_months_at_start,
+       CASE WHEN DATE_DIFF('month', CAST(joined_at AS DATE), DATE '2026-01-01') <= 3 THEN '0-3m'
+            WHEN DATE_DIFF('month', CAST(joined_at AS DATE), DATE '2026-01-01') <= 9 THEN '4-9m'
+            WHEN DATE_DIFF('month', CAST(joined_at AS DATE), DATE '2026-01-01') <= 18 THEN '10-18m'
             ELSE '18m+' END AS tenure_band
 FROM clean_agents;
 

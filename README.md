@@ -4,12 +4,14 @@ Assignment submission: determine what actually happened to collections recovery
 over ~12 months of messy, contradictory multi-system data — and decide where ₹10
 Cr should go.
 
-**Verdict: the reported improvement is not real.** True trend is
-**+0.023 ₹Cr/month (95% CI [−0.37, +0.42], p = 0.88 — no detectable trend at
-n = 7 months; leave-one-out stable)**; the quoted +11% is exactly the
-Feb→Mar bounce (+11.1%, gold definition), reversed by April (−7.3%). *"No
-detectable trend" is a power-limited finding, not proof nothing changed — what
-it does prove is that the specific +11%-MoM claim has no evidence.* Several
+**Verdict: the reported improvement is not real — and it is largely a calendar
+artifact.** True trend is **+0.023 ₹Cr/month (95% CI [−0.37, +0.42], p = 0.88 —
+no detectable trend at n = 7; leave-one-out stable)**; the quoted +11% is exactly
+the Feb→Mar jump in *monthly totals* — February has 28 days, so **per-day
+recovery moves just +0.2%** and runs flat all year (₹0.584–0.609 ₹Cr/day,
+per-day OLS slope −0.002, p = 0.27). *"No detectable trend" is a power-limited
+finding, not proof nothing changed — what it does prove is that the specific
++11%-MoM claim has no evidence.* Several
 upstream errors manufacture optimism: **₹2.59 Cr** of double-posted payments
 (reconciled exactly to the golden-vs-raw gap by `src/verify.py`), a "KEPT"
 promise rate reported at ~18–19% but cash-verified at **~3.6%**, 56% of calls
@@ -36,6 +38,7 @@ production design: [`reports/production_design.md`](reports/production_design.md
 | **Metric-definition registry** | `reports/metric_definitions.yml` (versioned; numerator/denominator/grain/exclusions/source-SQL for every KPI + legacy-definition comparison |
 | Statistical investigation | `src/analysis.py` → `reports/analysis_summary.json` (mix/rate decomposition, cohort, Simpson-style channel check, survivorship, attribution-window bias, trend test with t-CI + leave-one-out sensitivity) |
 | Counterfactual (targeting change) | exact-matched DiD inside `src/analysis.py` (+ uncertainty & pre-trend check) + notebook §3 |
+| Investment appendix (6 options, placebo, sizing) | `reports/appendix_investment_and_counterfactual.md` |
 | Driver analysis (all brief dimensions) | `reports/driver_matrix.md` — 53-row results matrix with n, effect, evidence class (incl. language: N/A — no column; loan_type as client proxy) |
 | Reproducibility proof | `src/verify.py` → `reports/verify_report.md` (16 tests: clean-rebuild determinism, PK uniqueness, ₹2.59 Cr money-math reconciliation, funnel monotonicity, FK/enum checks) |
 
@@ -78,15 +81,18 @@ history, agent identity chaos — all handled with documented, quantified rules.
 **Option 5 — WhatsApp / digital engagement, as the single primary investment**
 (the AI concierge is an implementation lever inside it, not a separate option).
 All six options are compared on one consistent model in `reports/analysis_summary.json`
-(`investment.options`) and the memo: option 1 telephony infra (ROI 0.8×, defer),
-2 more agents (1.1×, defer), 3 AI voice concierge (1.2×, folded into option 5),
-4 targeting/data (1.0×, DiD null, defer), **5 WhatsApp/digital (3.8×, INVEST)**,
-6 field ops (0.5×, defer). Estimate: **₹13.2 Cr/yr incremental** (conservative
-₹5.9 Cr, upside ₹16.5 Cr via one funnel: msgs → pay-click → ₹3,930/msg), **₹3.5 Cr**
-deploy now, **≈3.2-month break-even** (ramp-adjusted ~4). Confidence medium-low
-— attribution coverage is only **12.4%**; a 2-month geo-split test before
-scaling past ₹4 Cr is part of the recommendation. Sequencing: fix measurement
-first (free), scale digital second, hold ₹6.5 Cr until the split test reads out.
+(`investment.options`) and memo §5: option 1 telephony infra (defer), 2 more agents
+(defer), 3 AI voice concierge (folded into option 5), 4 targeting/data (DiD null,
+defer), **5 WhatsApp/digital (INVEST)**, 6 field ops (defer). Base estimate:
+**₹13.2 Cr/yr incremental** (conservative ₹5.9 Cr, upside ₹16.5 Cr), **₹3.5 Cr**
+deploy now → **net ROI 2.8×** ((13.2−3.5)/3.5; gross 3.8×), **≈3.2-month
+break-even**. Committing all ₹10 Cr today would net only 0.3× — the increment
+scales with borrower *reach*, not rupees — so the remaining **₹6.5 Cr is
+risk-gated** behind the pre-registered 2-month geo-split test. Full table,
+placebo test and sizing math: `reports/appendix_investment_and_counterfactual.md`.
+Funnel honesty: raw WhatsApp events (clicks ≈ sends) yield no usable conversion
+rate; the estimate is anchored on volume × ~₹3,930 cash per sent message and its
+uncertainty is dominated by attribution coverage (12.4%).
 
 ## How to run (reproducible)
 

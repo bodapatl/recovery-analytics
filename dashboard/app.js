@@ -231,6 +231,7 @@ document.getElementById("cf-verdict").innerHTML =
   "%).</b> " + (CF.did_uncertainty ? "95% CI ₹" + fmt(CF.did_uncertainty.ci95_inr_per_acct[0],0) + " to ₹" +
   fmt(CF.did_uncertainty.ci95_inr_per_acct[1],0) + ", p = " + CF.did_uncertainty.p_value + " — " +
   "the CI straddles zero, so <b>no detectable strategy lift</b> (exploratory; needs a geo-split)." : "≈ no genuine lift.")
+  + (CF.placebo_test ? " <em>Permutation placebo (2,000 arm-swaps): p = " + CF.placebo_test.p_placebo + ".</em>" : "")
   + " Counterfactual ≈ reality: <b>" + cr(CF.counterfactual_monthly_recovery_cr) + "</b> monthly recovery would have looked materially the same."
   + (D.counterfactual_pretrend ? " <em>Pre-trend check plotted in the notebook; null result treated as exploratory.</em>" : "");
 
@@ -243,17 +244,19 @@ const optRows = (INV.options || []).map(o => {
   return `<tr><td><b>${o.name}</b><br><small>${o.evidence}</small></td>` +
          `<td>₹${o.cost_cr} Cr</td>` +
          `<td>${o.incremental_annual_cr.conservative} / <b>${o.incremental_annual_cr.base}</b> / ${o.incremental_annual_cr.upside}</td>` +
-         `<td>${o.roi_base}x</td><td>${o.breakeven_months_base > 12 ? "—" : o.breakeven_months_base + " mo"}</td><td>${v}</td></tr>`;
+         `<td>${o.net_roi_base ?? o.gross_roi_base}x</td><td>${o.breakeven_months_base > 12 ? "—" : o.breakeven_months_base + " mo"}</td><td>${v}</td></tr>`;
 }).join("");
 const WF = INV.whatsapp_funnel || {};
 document.getElementById("invest-body").innerHTML = `
-  <div class="invest-pick">Recommendation: <b>Option 5 — WhatsApp / digital engagement</b> (sole primary investment; ₹3.5 Cr deploy now, ₹6.5 Cr held for the geo-split test). The AI concierge is an implementation lever <i>inside</i> option 5, not a separate option.</div>
+  <div class="invest-pick">Recommendation: <b>Option 5 — WhatsApp / digital engagement</b> (sole primary investment; ₹3.5 Cr deploy now, ₹6.5 Cr risk-gated behind the geo-split test). The AI concierge is an implementation lever <i>inside</i> option 5, not a separate option.</div>
   <table class="mini-table">
-    <tr><th>Option (all 6 compared)</th><th>Cost</th><th>Incr. ₹Cr/yr C/B/U</th><th>ROI base</th><th>B/E base</th><th>Call</th></tr>
+    <tr><th>Option (all 6 compared)</th><th>Cost</th><th>Incr. ₹Cr/yr C/B/U</th><th>Net ROI base</th><th>B/E base</th><th>Call</th></tr>
     ${optRows}
   </table>
   <table class="mini-table" style="margin-top:8px">
-    <tr><td>Funnel (measured)</td><td>~${WF.sent_pm} msgs/mo → ${WF.click_to_pay_rate_pct}% pay-click → ${cr(WF.attributed_cash_pm_cr)} attributed cash/mo (₹${WF.cash_per_sent_message_inr}/msg)</td></tr>
+    <tr><td>Why not all ₹10 Cr now</td><td>${INV.full_10cr_program.why_not_full_10_now}</td></tr>
+    <tr><td>ROI convention</td><td>net ROI = (base incremental − cost) ÷ cost: ${(INV.full_10cr_program.net_roi_deployment_scoped)}x on the ₹3.5 Cr deployment; ${INV.full_10cr_program.net_roi_if_all_10_committed_today}x if all ₹10 Cr were committed today</td></tr>
+    <tr><td>Funnel (measured)</td><td>raw event counts (clicks ≈ sends, lifecycle ~1:1) give no usable conversion rate — estimate anchored on ~${WF.sent_pm} msgs/mo × ₹${WF.cash_per_sent_message_inr}/msg → ${cr(WF.attributed_cash_pm_cr)} attributed cash/mo</td></tr>
     <tr><td>Cases</td><td>conservative ${WF.incremental_annual_cr.conservative} Cr · base <b>${WF.incremental_annual_cr.base} Cr</b> · upside ${WF.incremental_annual_cr.upside} Cr</td></tr>
     <tr><td>Timing</td><td>${INV.timing.breakeven_note}</td></tr>
     <tr><td>Downside</td><td>${INV.downside}</td></tr>
