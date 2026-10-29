@@ -5,12 +5,17 @@ over ~12 months of messy, contradictory multi-system data — and decide where �
 Cr should go.
 
 **Verdict: the reported improvement is not real.** True trend is
-**+0.023 ₹Cr/month (p = 0.88 — statistically flat)**; the quoted +11% is exactly
-the Feb→Mar bounce (+11.1%, gold definition), reversed by April (−7.3%). Several
-upstream errors manufacture optimism: **₹2.59 Cr** of double-posted payments, a
-"KEPT" promise rate reported at ~18–19% but cash-verified at **~3.6%**, 56% of
-calls in wrong hour buckets, and attribution logic that drifts **₹0 → ₹10.95
-Cr/month** onto stale touches by July.
+**+0.023 ₹Cr/month (95% CI [−0.37, +0.42], p = 0.88 — no detectable trend at
+n = 7 months; leave-one-out stable)**; the quoted +11% is exactly the
+Feb→Mar bounce (+11.1%, gold definition), reversed by April (−7.3%). *"No
+detectable trend" is a power-limited finding, not proof nothing changed — what
+it does prove is that the specific +11%-MoM claim has no evidence.* Several
+upstream errors manufacture optimism: **₹2.59 Cr** of double-posted payments
+(reconciled exactly to the golden-vs-raw gap by `src/verify.py`), a "KEPT"
+promise rate reported at ~18–19% but cash-verified at **~3.6%**, 56% of calls
+in wrong hour buckets, and attribution logic that drifts **₹0 → ₹10.95 Cr/month**
+onto stale touches by July (only **12.4%** of golden cash — 9.3–14.6% by month —
+obeys the 14-day attribution rule).
 
 Full story: [`reports/executive_memo.md`](reports/executive_memo.md) (2 pages) ·
 dashboard: [`dashboard/index.html`](dashboard/index.html) ·
@@ -28,8 +33,11 @@ production design: [`reports/production_design.md`](reports/production_design.md
 | Executive dashboard (one screen, decision-first) | `dashboard/index.html` (+ `data.js` export current as of last run) |
 | Executive memo (≤2 pages) | `reports/executive_memo.md` |
 | Architecture diagram | `architecture/architecture_diagram.svg` (+ mermaid in this README) |
-| Statistical investigation | `src/analysis.py` → `reports/analysis_summary.json` (mix/rate decomposition, cohort, Simpson-style channel check, survivorship, attribution-window bias, trend test) |
-| Counterfactual (targeting change) | exact-matched DiD inside `src/analysis.py` + notebook §3 |
+| **Metric-definition registry** | `reports/metric_definitions.yml` (versioned; numerator/denominator/grain/exclusions/source-SQL for every KPI + legacy-definition comparison |
+| Statistical investigation | `src/analysis.py` → `reports/analysis_summary.json` (mix/rate decomposition, cohort, Simpson-style channel check, survivorship, attribution-window bias, trend test with t-CI + leave-one-out sensitivity) |
+| Counterfactual (targeting change) | exact-matched DiD inside `src/analysis.py` (+ uncertainty & pre-trend check) + notebook §3 |
+| Driver analysis (all brief dimensions) | `reports/driver_matrix.md` — 53-row results matrix with n, effect, evidence class (incl. language: N/A — no column; loan_type as client proxy) |
+| Reproducibility proof | `src/verify.py` → `reports/verify_report.md` (16 tests: clean-rebuild determinism, PK uniqueness, ₹2.59 Cr money-math reconciliation, funnel monotonicity, FK/enum checks) |
 
 ## The data
 
@@ -61,19 +69,24 @@ history, agent identity chaos — all handled with documented, quantified rules.
 6. **No portfolio mix story** — cohort × band mix/rate decomposition ≈ ₹0;
    recovery per origination-cohort is stable. *(Hypothesis rejected.)*
 7. **Strategy change didn't move cash** — exact-matched DiD = **+₹895 per
-   targeted account/month (≈+5.6%, n.s.)**; counterfactual Jan–Jul without the
-   change ≈ ₹17.8 Cr/month vs ~₹18–19 Cr actual.
+   targeted account/month (≈+5.6%; 95% CI [−₹1,224, +₹3,013], p = 0.40 —
+   exploratory)**; pre-trend check supports the design; counterfactual Jan–Jul
+   without the change ≈ ₹17.8 Cr/month vs ~₹18–19 Cr actual.
 
 ## Where the ₹10 Cr goes
 
-**WhatsApp / digital engagement scaling** — the only channel with a genuine,
-cash-backed upward share trend (2.5% → 3.3%+), at ~50× lower unit cost than
-voice. Estimate: **₹13.2 Cr/yr incremental**, **₹3.5–4.0 Cr** cost, **≈3.8×
-ROI**, **≈3.2-month break-even**, downside ≈ ₹6 Cr/yr (1.7×) if click-to-pay
-halves at scale. Confidence medium-low — a 2-month geo-split test before
+**Option 5 — WhatsApp / digital engagement, as the single primary investment**
+(the AI concierge is an implementation lever inside it, not a separate option).
+All six options are compared on one consistent model in `reports/analysis_summary.json`
+(`investment.options`) and the memo: option 1 telephony infra (ROI 0.8×, defer),
+2 more agents (1.1×, defer), 3 AI voice concierge (1.2×, folded into option 5),
+4 targeting/data (1.0×, DiD null, defer), **5 WhatsApp/digital (3.8×, INVEST)**,
+6 field ops (0.5×, defer). Estimate: **₹13.2 Cr/yr incremental** (conservative
+₹5.9 Cr, upside ₹16.5 Cr via one funnel: msgs → pay-click → ₹3,930/msg), **₹3.5 Cr**
+deploy now, **≈3.2-month break-even** (ramp-adjusted ~4). Confidence medium-low
+— attribution coverage is only **12.4%**; a 2-month geo-split test before
 scaling past ₹4 Cr is part of the recommendation. Sequencing: fix measurement
-first (free), scale digital second, hold the remaining budget until the split
-test reads out.
+first (free), scale digital second, hold ₹6.5 Cr until the split test reads out.
 
 ## How to run (reproducible)
 
@@ -93,9 +106,9 @@ recovery-analytics/
 ├── data/raw/                     # published CSVs (immutable inputs)
 ├── data/golden/                  # generated golden artifacts (parquet/CSV)
 ├── sql/                          # the SQL repository (staging→clean→golden→forensics)
-├── src/                          # pipeline, forensics, analysis, dashboard export, notebook builder
+├── src/                          # pipeline, forensics, analysis, verify, driver matrix, dashboard export, notebook builder
 ├── analysis/analysis_notebook.ipynb
-├── reports/                      # dq report · exec memo · analysis summary · production design
+├── reports/                      # dq report · exec memo · analysis summary · metric_definitions.yml · driver_matrix.md · verify_report.md · production design
 ├── dashboard/                    # single-screen executive dashboard
 ├── architecture/                 # production architecture diagram
 └── run_all.py

@@ -112,3 +112,7 @@ def _row_summary(con: duckdb.DuckDBPyConnection) -> dict:
         float(d2["inflated_amount_by_doubles"].iloc[0]) if len(d2) else None
     )
     return summary
+
+
+if __name__ == "__main__":
+    run()

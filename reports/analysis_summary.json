@@ -64,9 +64,60 @@
       "t_stat": 0.1486036775523216,
       "p_value": 0.8818663709677381,
       "r2": 0.004397189920816724,
-      "intercept": 18.051428571428573
+      "intercept": 18.051428571428573,
+      "slope_ci95_cr_mom": [
+        -0.373,
+        0.418
+      ],
+      "n_months": 7,
+      "power_note": "tiny sample (n=7, df=5): a true monthly trend up to +0.42 Cr/mo could still hide inside this CI \u2014 the claim we reject is the specific '+11% MoM improvement', not every possible slow trend"
     },
-    "reportable_note": "slope in Cr/month; flat if insignificant"
+    "reportable_note": "slope in Cr/month; flat if insignificant",
+    "leave_one_out_sensitivity": [
+      {
+        "dropped_month": "2026-01",
+        "slope_cr_mom": 0.157,
+        "p_value": 0.405,
+        "ci_hi_cr_mom": 0.755
+      },
+      {
+        "dropped_month": "2026-02",
+        "slope_cr_mom": -0.088,
+        "p_value": 0.58,
+        "ci_hi_cr_mom": 0.416
+      },
+      {
+        "dropped_month": "2026-03",
+        "slope_cr_mom": 0.073,
+        "p_value": 0.7,
+        "ci_hi_cr_mom": 0.68
+      },
+      {
+        "dropped_month": "2026-04",
+        "slope_cr_mom": 0.034,
+        "p_value": 0.867,
+        "ci_hi_cr_mom": 0.679
+      },
+      {
+        "dropped_month": "2026-05",
+        "slope_cr_mom": 0.008,
+        "p_value": 0.971,
+        "ci_hi_cr_mom": 0.69
+      },
+      {
+        "dropped_month": "2026-06",
+        "slope_cr_mom": 0.082,
+        "p_value": 0.683,
+        "ci_hi_cr_mom": 0.723
+      },
+      {
+        "dropped_month": "2026-07",
+        "slope_cr_mom": -0.083,
+        "p_value": 0.676,
+        "ci_hi_cr_mom": 0.551
+      }
+    ],
+    "evidence_language": "we fail to detect a trend at this sample size; this is NOT proof that recovery did not improve"
   },
   "decomposition_jan_to_jul": {
     "total_change_cr": 0.0,
@@ -269,13 +320,22 @@
       1502
     ],
     "wa_click": [
-      2767,
-      2554,
-      2808,
-      2702,
-      2893,
-      2738,
-      2807
+      1410,
+      1262,
+      1394,
+      1315,
+      1487,
+      1386,
+      1440
+    ],
+    "wa_replied": [
+      1357,
+      1292,
+      1414,
+      1387,
+      1406,
+      1352,
+      1367
     ],
     "sms_sent": [
       1590,
@@ -287,13 +347,13 @@
       1657
     ],
     "wa_click_rate_pct": [
-      196.0,
-      193.3,
-      200.0,
-      198.1,
-      212.6,
-      192.5,
-      186.9
+      99.9,
+      95.5,
+      99.3,
+      96.4,
+      109.3,
+      97.5,
+      95.9
     ]
   },
   "claim_test": {
@@ -458,8 +518,161 @@
     ],
     "verdict": "payments have no trustworthy 'last-touch' anchor: any campaign league table built on latest-touch is noise"
   },
+  "attribution_coverage": {
+    "definition": "(amt_rpc14d + amt_contact7d) / recovery_amt, full months Jan-Jul",
+    "avg_pct": 12.4,
+    "min_pct": 9.3,
+    "max_pct": 14.6,
+    "by_month": [
+      {
+        "month": "2026-01",
+        "pct": 9.3
+      },
+      {
+        "month": "2026-02",
+        "pct": 12.0
+      },
+      {
+        "month": "2026-03",
+        "pct": 13.6
+      },
+      {
+        "month": "2026-04",
+        "pct": 12.0
+      },
+      {
+        "month": "2026-05",
+        "pct": 14.6
+      },
+      {
+        "month": "2026-06",
+        "pct": 11.7
+      },
+      {
+        "month": "2026-07",
+        "pct": 13.8
+      }
+    ]
+  },
   "investment": {
     "recommendation": "whatsapp_digital",
+    "framework": "all six options priced on one model: year-1 incremental recovery (conservative/base/upside) vs deployment cost; scenario math, explicitly labeled where data-derived",
+    "options": [
+      {
+        "id": "telephony_infrastructure",
+        "name": "Telephony infrastructure upgrade",
+        "cost_cr": 2.0,
+        "incremental_annual_cr": {
+          "conservative": 0.5,
+          "base": 1.5,
+          "upside": 3.0
+        },
+        "roi_base": 0.8,
+        "breakeven_months_base": 16.0,
+        "evidence": "Hypothesis \u2014 vendor connect-rate spread is only ~2.3 pp and no connect-rate\u2192cash elasticity is identified in this data; defer",
+        "evidence_data_derived": false,
+        "verdict": "defer"
+      },
+      {
+        "id": "agent_capacity",
+        "name": "More agents / capacity",
+        "cost_cr": 3.5,
+        "incremental_annual_cr": {
+          "conservative": 1.0,
+          "base": 4.0,
+          "upside": 8.0
+        },
+        "roi_base": 1.1,
+        "breakeven_months_base": 10.5,
+        "evidence": "Correlation \u2014 agent-hour productivity is flat (\u20b916.4\u201317.0k/hr all year); marginal hours have no proven conversion; needs a randomized headcount pilot before committing",
+        "evidence_data_derived": false,
+        "verdict": "defer"
+      },
+      {
+        "id": "ai_voice_concierge",
+        "name": "AI voice concierge",
+        "cost_cr": 2.5,
+        "incremental_annual_cr": {
+          "conservative": 1.0,
+          "base": 3.0,
+          "upside": 5.0
+        },
+        "roi_base": 1.2,
+        "breakeven_months_base": 10.0,
+        "evidence": "Correlation \u2014 promising as an implementation lever inside the WhatsApp/digital build (concierge lifts response), but no isolated voice-bot evidence in this data",
+        "evidence_data_derived": false,
+        "verdict": "defer (implemented inside option 5)"
+      },
+      {
+        "id": "targeting_data",
+        "name": "Better targeting / data",
+        "cost_cr": 1.5,
+        "incremental_annual_cr": {
+          "conservative": 0.0,
+          "base": 1.5,
+          "upside": 4.0
+        },
+        "roi_base": 1.0,
+        "breakeven_months_base": 12.0,
+        "evidence": "Correlation (null) \u2014 the exact-matched DiD found +\u20b9895/acct/mo, 95% CI [\u2212\u20b91,224, +\u20b93,013], p=0.40: no detectable targeting lift",
+        "evidence_data_derived": false,
+        "verdict": "defer \u2014 run geo-split before spend"
+      },
+      {
+        "id": "whatsapp_digital",
+        "name": "WhatsApp / digital engagement",
+        "cost_cr": 3.5,
+        "incremental_annual_cr": {
+          "conservative": 5.9,
+          "base": 13.2,
+          "upside": 16.5
+        },
+        "roi_base": 3.8,
+        "breakeven_months_base": 3.2,
+        "evidence": "Strong \u2014 only channel with a cash-backed upward drift (2.5%\u21923.3% attributed share), unit cost ~3 orders of magnitude below voice (\u20b90.20/msg vs ~\u20b9740/attempt), funnel measured",
+        "evidence_data_derived": true,
+        "verdict": "INVEST \u20b93.5 Cr now; hold remainder for geo-split test"
+      },
+      {
+        "id": "field_ops",
+        "name": "Field-operations expansion",
+        "cost_cr": 4.0,
+        "incremental_annual_cr": {
+          "conservative": 1.0,
+          "base": 2.0,
+          "upside": 4.0
+        },
+        "roi_base": 0.5,
+        "breakeven_months_base": 24.0,
+        "evidence": "Correlation \u2014 3.2% of attributed cash from 25k visits; no cost source in contract (per-visit knob absent) so ROI cannot be sized",
+        "evidence_data_derived": false,
+        "verdict": "defer"
+      }
+    ],
+    "whatsapp_funnel": {
+      "sent_pm": 1398.0,
+      "click_to_pay_rate_pct": 99.1,
+      "attributed_cash_pm_cr": 0.55,
+      "cash_per_sent_message_inr": 3934.19,
+      "base_case": "3x sent volume at constant click-to-pay conversion \u2192 +2x attributed WA cash",
+      "conservative_case": "click-to-pay halves at scale and only ~55% of scaled cash is truly incremental (not cannibalized voice cash)",
+      "upside_case": "3x reach and +25% conversion (concierge + 10-min SLA) \u2192 2.5x",
+      "note": "PAYMENT_CLICK events \u2248 sent volume in this dataset (synthetic lifecycle logging), so click-to-pay is at its ceiling; the conservative case already assumes it halves at 3x reach",
+      "incremental_annual_cr": {
+        "conservative": 5.9,
+        "base": 13.2,
+        "upside": 16.5
+      }
+    },
+    "timing": {
+      "ramp": "linear ramp to 3x reach over the first ~2 months",
+      "breakeven_note": "steady-state break-even \u2248 3.2 months; ramp shifts it ~+1 month; costs are ~90% fixed (platform+ops) so cash-positive early"
+    },
+    "budget_plan": {
+      "now_commit_cr": 3.5,
+      "held_for_geosplit_test_cr": 6.5,
+      "geosplit": "2-month geo-split WA-scale test in ~3 states before releasing the remaining \u20b96 Cr"
+    },
     "wa_avg_monthly_cr": 0.55,
     "wa_share_start_pct": 2.47,
     "wa_share_end_pct": 3.34,
@@ -467,30 +680,31 @@
     "estimated_cost_cr": 3.5,
     "roi_multiple": 3.8,
     "breakeven_months": 3.2,
+    "downside": "conservative case ~\u20b95.9 Cr \u2014 still above break-even once fixed costs absorb most of \u20b93.5 Cr",
     "assumptions": [
-      "3x WhatsApp reach with current click-to-pay conversion held",
-      "assumed blend provider + concierge cost ~3.5 Cr/year",
-      "no cannibalization of voice recovery assumed (voice-attributed flat)"
+      "3x WhatsApp reach with current reply/click-to-pay conversion held (base)",
+      "assumed blend provider + concierge cost ~3.5 Cr/year (no cost table in contract)",
+      "no cannibalization of voice recovery assumed in base (voice-attributed flat)",
+      "options 1,2,3,4,6 sized by documented scenario judgment \u2014 data has no identified elasticity for them"
     ],
-    "downside": "if click-to-pay halves at scale, incremental ~1x (+6 Cr) and ROI ~1.7x",
-    "confidence": "medium-low: attribution is only 8% of cash; a 2-month geo split test would sharpen the estimate"
+    "confidence": "medium-low: attribution coverage is only 12.4% of cash (range 9.3-14.6%); scenario arithmetic, not a causal estimate \u2014 a 2-month geo split test would sharpen it"
   },
   "counterfactual_detail": [
     {
-      "arm": "treatment_early",
-      "count_star()": 7779
+      "arm": "control",
+      "count_star()": 7707
     },
     {
       "arm": "treatment_late",
       "count_star()": 3662
     },
     {
-      "arm": "control",
-      "count_star()": 7707
-    },
-    {
       "arm": "mixed",
       "count_star()": 4196
+    },
+    {
+      "arm": "treatment_early",
+      "count_star()": 7779
     }
   ],
   "counterfactual": {
@@ -518,7 +732,83 @@
     },
     "did_inr_per_account": 895.0,
     "did_pct_of_treatment_pre": 5.6,
+    "did_uncertainty": {
+      "method": "dispersion of the per-cell DiD across matched cells (df = k-1); cells are the unit of variation, which is conservative vs treating each account as independent",
+      "n_cells": 80,
+      "se_inr_per_acct": 1059.0,
+      "ci95_inr_per_acct": [
+        -1224.0,
+        3013.0
+      ],
+      "p_value": 0.398,
+      "evidence_class": "exploratory",
+      "verdict": "CI straddles zero: no detectable effect at this sample size; treat the design as exploratory until a geo-split or randomized rollout exists"
+    },
     "counterfactual_monthly_recovery_cr": 17.84,
     "actual_monthly_recovery_apr_jul_cr": null
+  },
+  "counterfactual_pretrend": {
+    "per_account_inr_by_month": {
+      "legacy_only": {
+        "2026-01": 6471.7176540807095,
+        "2026-02": 5558.2741326067235,
+        "2026-03": 6289.5836927468545,
+        "2026-04": 5397.543836771771,
+        "2026-05": 6201.380874529645,
+        "2026-06": 5626.700211496034,
+        "2026-07": 6487.45309069677,
+        "2026-08": 1351.3077475022712
+      },
+      "modern_early": {
+        "2026-01": 6373.098080730167,
+        "2026-02": 5621.718975446715,
+        "2026-03": 6263.629526931482,
+        "2026-04": 5935.899650340656,
+        "2026-05": 5889.491443630282,
+        "2026-06": 5936.930584908088,
+        "2026-07": 5978.71714616275,
+        "2026-08": 1591.332153233064
+      },
+      "modern_late": {
+        "2026-01": 5830.5124408246365,
+        "2026-02": 5774.792533723595,
+        "2026-03": 6684.041620005092,
+        "2026-04": 5892.952996945788,
+        "2026-05": 6355.990259608044,
+        "2026-06": 6042.247412827687,
+        "2026-07": 6232.191767625354,
+        "2026-08": 1538.2506261135145
+      }
+    },
+    "pre_period_slope_check": {
+      "legacy_only": {
+        "slope_inr_per_month": -91.07,
+        "p_value": 0.848,
+        "months": [
+          "2026-01",
+          "2026-02",
+          "2026-03"
+        ]
+      },
+      "modern_early": {
+        "slope_inr_per_month": -54.73,
+        "p_value": 0.892,
+        "months": [
+          "2026-01",
+          "2026-02",
+          "2026-03"
+        ]
+      },
+      "modern_late": {
+        "slope_inr_per_month": 426.76,
+        "p_value": 0.126,
+        "months": [
+          "2026-01",
+          "2026-02",
+          "2026-03"
+        ]
+      }
+    },
+    "note": "pre-period (Jan-Mar) slopes should be broadly similar across arms for the DiD to identify causally"
   }
 }

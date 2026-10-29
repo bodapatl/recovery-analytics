@@ -314,11 +314,13 @@ CREATE OR REPLACE TABLE month_digital AS
 SELECT COALESCE(w.month, s.month) AS month,
        COALESCE(w.wa_sent, 0) AS wa_sent,
        COALESCE(w.wa_click, 0) AS wa_click,
+       COALESCE(w.wa_replied, 0) AS wa_replied,
        COALESCE(s.sms_sent, 0) AS sms_sent
 FROM (
   SELECT DATE_TRUNC('month', CAST(utc_to_ist(event_at_utc) AS DATE)) AS month,
          SUM(CASE WHEN event_type='SENT' THEN 1 ELSE 0 END) AS wa_sent,
-         SUM(CASE WHEN event_type IN ('REPLIED','PAYMENT_CLICK') THEN 1 ELSE 0 END) AS wa_click
+         SUM(CASE WHEN event_type='PAYMENT_CLICK' THEN 1 ELSE 0 END) AS wa_click,
+         SUM(CASE WHEN event_type='REPLIED' THEN 1 ELSE 0 END) AS wa_replied
   FROM clean_whatsapp_events WHERE keep_flag GROUP BY 1
 ) w
 FULL JOIN (
@@ -368,7 +370,7 @@ SELECT m.month,
   pt.n_ptp_events, pt.n_ptp_accounts, pt.n_ptp_kept_verified, pt.n_ptp_status_kept,
   pt.n_ptp_kept_no_cash,
   hm.agent_hours, hm.n_agents_active,
-  dg.wa_sent, dg.wa_click, dg.sms_sent,
+  dg.wa_sent, dg.wa_click, dg.wa_replied, dg.sms_sent,
   ch.amt_voice, ch.amt_whatsapp, ch.amt_sms, ch.amt_field, ch.amt_other,
   CURRENT_TIMESTAMP AS golden_at
 FROM months m

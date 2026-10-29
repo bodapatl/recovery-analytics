@@ -228,21 +228,37 @@ new Chart(document.getElementById("chart-cf"), {
 });
 document.getElementById("cf-verdict").innerHTML =
   "<b>Result: ₹" + fmt(CF.did_inr_per_account, 0) + "/account/month (" + CF.did_pct_of_treatment_pre +
-  "%) ≈ no genuine lift.</b> The 'strategy change' did not change recovery beyond what matched legacy-targeted accounts themselves gained. "
-  + "Counterfactual ≈ reality: <b>" + cr(CF.counterfactual_monthly_recovery_cr) + "</b> monthly recovery would have looked materially the same.";
+  "%).</b> " + (CF.did_uncertainty ? "95% CI ₹" + fmt(CF.did_uncertainty.ci95_inr_per_acct[0],0) + " to ₹" +
+  fmt(CF.did_uncertainty.ci95_inr_per_acct[1],0) + ", p = " + CF.did_uncertainty.p_value + " — " +
+  "the CI straddles zero, so <b>no detectable strategy lift</b> (exploratory; needs a geo-split)." : "≈ no genuine lift.")
+  + " Counterfactual ≈ reality: <b>" + cr(CF.counterfactual_monthly_recovery_cr) + "</b> monthly recovery would have looked materially the same."
+  + (D.counterfactual_pretrend ? " <em>Pre-trend check plotted in the notebook; null result treated as exploratory.</em>" : "");
 
 /* -------------------------------------------------------- investment card */
 const INV = D.investment;
+const optRows = (INV.options || []).map(o => {
+  const v = o.verdict.startsWith("INVEST")
+    ? '<span class="ok">INVEST (option 5)</span>'
+    : '<span class="warn">defer</span>';
+  return `<tr><td><b>${o.name}</b><br><small>${o.evidence}</small></td>` +
+         `<td>₹${o.cost_cr} Cr</td>` +
+         `<td>${o.incremental_annual_cr.conservative} / <b>${o.incremental_annual_cr.base}</b> / ${o.incremental_annual_cr.upside}</td>` +
+         `<td>${o.roi_base}x</td><td>${o.breakeven_months_base > 12 ? "—" : o.breakeven_months_base + " mo"}</td><td>${v}</td></tr>`;
+}).join("");
+const WF = INV.whatsapp_funnel || {};
 document.getElementById("invest-body").innerHTML = `
-  <div class="invest-pick">Recommendation: <b>WhatsApp / digital engagement (₹10 Cr → scaled automation + ops)</b></div>
+  <div class="invest-pick">Recommendation: <b>Option 5 — WhatsApp / digital engagement</b> (sole primary investment; ₹3.5 Cr deploy now, ₹6.5 Cr held for the geo-split test). The AI concierge is an implementation lever <i>inside</i> option 5, not a separate option.</div>
   <table class="mini-table">
-    <tr><td>Rationale</td><td>Attributed WhatsApp recovery doubled its share (${INV.wa_share_start_pct}% → ${INV.wa_share_end_pct}%) — the only genuinely improving channel while voice is flat.</td></tr>
-    <tr><td>Expected incremental</td><td><b>${cr(INV.expected_incremental_annual_cr, 1)}/yr</b> at 2x scale-up of digital recoveries</td></tr>
-    <tr><td>Cost to deploy</td><td>${cr(INV.estimated_cost_cr, 1)} (provider + AI concierge + ops integration)</td></tr>
-    <tr><td>Expected ROI</td><td><b>${INV.roi_multiple}x</b> annual</td></tr>
-    <tr><td>Break-even</td><td>≈ ${INV.breakeven_months} months</td></tr>
+    <tr><th>Option (all 6 compared)</th><th>Cost</th><th>Incr. ₹Cr/yr C/B/U</th><th>ROI base</th><th>B/E base</th><th>Call</th></tr>
+    ${optRows}
+  </table>
+  <table class="mini-table" style="margin-top:8px">
+    <tr><td>Funnel (measured)</td><td>~${WF.sent_pm} msgs/mo → ${WF.click_to_pay_rate_pct}% pay-click → ${cr(WF.attributed_cash_pm_cr)} attributed cash/mo (₹${WF.cash_per_sent_message_inr}/msg)</td></tr>
+    <tr><td>Cases</td><td>conservative ${WF.incremental_annual_cr.conservative} Cr · base <b>${WF.incremental_annual_cr.base} Cr</b> · upside ${WF.incremental_annual_cr.upside} Cr</td></tr>
+    <tr><td>Timing</td><td>${INV.timing.breakeven_note}</td></tr>
     <tr><td>Downside</td><td>${INV.downside}</td></tr>
     <tr><td>Confidence</td><td>${INV.confidence}</td></tr>
+    <tr><td>Attribution coverage</td><td>${D.attribution_coverage ? D.attribution_coverage.definition + " = <b>" + D.attribution_coverage.avg_pct + "%</b> (" + D.attribution_coverage.min_pct + "–" + D.attribution_coverage.max_pct + "% by month) — the canonical figure used across all reports" : ""}</td></tr>
   </table>`;
 
 /* ------------------------------------------------------------- dq table */

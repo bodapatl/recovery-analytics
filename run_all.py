@@ -19,6 +19,8 @@ def main() -> None:
     run(["-m", "src.pipeline"])              # SQL pipeline + golden exports
     run(["-m", "src.forensics"])             # data quality report (auto-numbers)
     run(["-m", "src.analysis"])              # stats + counterfactual + investment
+    run(["-m", "src.verify"])                # reproducibility + reconciliation tests
+    run(["-m", "src.driver_matrix"])         # driver results matrix
     run(["-m", "src.export_dashboard"])      # dashboard/data.js
     run(["-m", "src.build_notebook"])        # regenerate notebook
     try:

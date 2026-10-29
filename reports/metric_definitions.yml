@@ -1,0 +1,196 @@
+# =============================================================================
+# metric_definitions.yml — the versioned central registry for every KPI
+# =============================================================================
+# Single source of truth for: numerator, denominator, grain, time window,
+# exclusions and source SQL. Every consumer (SQL marts, notebook, dashboard,
+# memo) MUST map its numbers back to a metric_id in this file.
+# If a metric changes, bump `metric_version` and keep the old definition in
+# the `legacy_definitions` block of the same entry — never edit silently.
+#
+# Global conventions (apply to all metrics):
+#   * business_tz       : Asia/Kolkata; all months are IST months
+#   * time_window       : full months 2026-01 .. 2026-07 (Aug-2026 is partial
+#                         and excluded from every trend/rate metric)
+#   * dedup_rule        : payments keep_flag — exact double payment_id rows
+#                         removed (500 ids; 346 double-SUCCESS rows = ₹2.59 Cr)
+#   * attribution_rule  : last RPC ≤14d (primary), else last contact ≤7d,
+#                         else UNATTRIBUTED  [metric_version 2.0]
+#   * platform          : DuckDB analytics.duckdb; marts in sql/03_golden.sql
+# =============================================================================
+
+registry_version: "1.0"
+as_of: "2026-10-29"
+
+
+metrics:
+
+  # ---------------------------------------------------------------- recovery
+  recovery_amount:
+    metric_id: recovery_amount
+    metric_version: "2.0"
+    label: "Recovery (₹ Cr)"
+    numerator: "SUM(amount) of clean_payments rows with keep_flag AND payment_status='SUCCESS'"
+    denominator: null                      # level metric, no denominator
+    grain: month (IST) / account-month / total
+    time_window: "2026-01-01 .. 2026-07-31 (Aug partial excluded)"
+    exclusions:
+      - "exact duplicate payment_id rows (₹2.59 Cr phantom removed)"
+      - "PENDING and REVERSED statuses (not cash)"
+    source_tables: [clean_payments, gold_payments_attributed, month_pay]
+    source_sql: "sql/03_golden.sql -> month_pay.recovery_amt"
+    legacy_definitions:
+      - version: "1.0"
+        issue: "reported view double-counts 346 double-SUCCESS rows and calls PENDING+REVERSED 'book'"
+        artifact: "reports/data_quality_report.md (fore_* tables)"
+
+  # -------------------------------------------------------------- engagement
+  contact_rate:
+    metric_id: contact_rate
+    metric_version: "2.0"
+    label: "Contact rate"
+    numerator: "COUNT(DISTINCT account_id with contact_flag=1 in month)  [gold_touchpoints]"
+    denominator: "n_targeted accounts for that month (target list)"
+    grain: month
+    exclusions:
+      - "FAILED WhatsApp/SMS events"
+      - "touchpoints without account_id"
+    warning: >-
+      the *reported* 'contact rate' used n_contacted (1.12x the target list,
+      includes channels like field visits and self-serve) as its own
+      denominator — not comparable; see denominator_probe in analysis_summary.
+    source_tables: [gold_touchpoints, clean_daily_targeting]
+    source_sql: "sql/03_golden.sql -> month_contact, month_target"
+
+  rpc_rate:
+    metric_id: rpc_rate
+    metric_version: "2.0"
+    label: "RPC rate (right-party contact)"
+    numerator: "COUNT(DISTINCT account_id with rpc_flag=1 in month)"
+    denominator: "n_targeted accounts (target list)"
+    grain: month
+    exclusions:
+      - "dispositions without account_id"
+      - "wrong-party / no-contact codes (canonical_code mapping, 02_clean.sql)"
+    source_tables: [gold_touchpoints, clean_call_dispositions]
+    source_sql: "sql/03_golden.sql -> month_contact.n_rpc_accounts"
+
+  connection_rate:
+    metric_id: connection_rate
+    metric_version: "2.0"
+    label: "Telephony connection rate"
+    numerator: "call_attempts with attempt_status='CONNECTED'"
+    denominator: "all kept call_attempts in month"
+    grain: month / vendor / IST-hour-band
+    exclusions: ["keep_flag = 0 rows"]
+    source_tables: [clean_call_attempts]
+    source_sql: "sql/03_golden.sql -> month_attempts.n_connected / n_attempts; driver matrix (vendor, hour)"
+
+  # -------------------------------------------------------------------- PTP
+  ptp_rate:
+    metric_id: ptp_rate
+    metric_version: "2.0"
+    label: "Promises-to-pay rate"
+    numerator: "COUNT(DISTINCT account_id with a PTP event in month)"
+    denominator: "n_targeted accounts (or contacted accounts, state which)"
+    grain: month
+    exclusions:
+      - "disposition-dedup rule: one PTP per account/day (system row preferred)"
+    source_tables: [gold_ptp, clean_promises_to_pay, clean_call_dispositions]
+    source_sql: "sql/03_golden.sql -> month_ptp.n_ptp_accounts"
+
+  ptp_kept_rate:
+    metric_id: ptp_kept_rate
+    metric_version: "2.0"
+    label: "PTP kept rate (VERIFIED)"
+    numerator: "PTP events kept_verified_flag=1 (cash ≥ event, within promise window)"
+    denominator: "PTP events in month (deduped)"
+    time_window_for_verification: "payment between PTP event and min(promised_date, event+14d), cap event+45d"
+    exclusions:
+      - "status_says_kept_flag rows WITHOUT cash (4,309 of 4,483) — reported fiction"
+    source_tables: [gold_ptp]
+    source_sql: "sql/03_golden.sql -> month_ptp.n_ptp_kept_verified / n_ptp_events"
+    legacy_definitions:
+      - version: "1.0"
+        issue: "trusted ptp_status='KEPT' → ~18-19% kept rate not backed by cash"
+        artifact: "reports/data_quality_report.md"
+
+  # --------------------------------------------------------------- recovery rates
+  recovery_rate:
+    metric_id: recovery_rate
+    metric_version: "2.0"
+    label: "Recovery rate on outstanding"
+    numerator: "recovery_amount (₹, deduped SUCCESS)"
+    denominator: "pool_outstanding for that month (accounts opened ≤ month end)"
+    grain: month
+    exclusions: ["see recovery_amount"]
+    source_tables: [month_pay, month_pool]
+    source_sql: "sql/03_golden.sql -> gold_monthly_metrics.recovery_amt / pool_outstanding"
+
+  recovery_per_account:
+    metric_id: recovery_per_account
+    metric_version: "2.0"
+    label: "Recovery per eligible account"
+    numerator: "recovery_amount (₹, deduped SUCCESS)"
+    denominator: "n_pool_accounts opened ≤ month end (survivorship-proof)"
+    grain: month / cohort / dpd band / state
+    exclusions: []
+    source_tables: [month_pay, month_pool, gold_accounts]
+    source_sql: "sql/03_golden.sql -> gold_monthly_metrics"
+
+  recovery_per_agent_hour:
+    metric_id: recovery_per_agent_hour
+    metric_version: "2.0"
+    label: "Recovery per agent-hour"
+    numerator: "recovery_amount (₹, month)"
+    denominator: "agent_hours (sum of session_hours_capped, IST work_month, logout-before-login removed)"
+    grain: month
+    exclusions:
+      - "agent sessions with logout_before_login_flag"
+      - "hours > session cap (04_clean forensics rule)"
+    warning: >-
+      this is recovery *over the whole pool* per agent-hour — NOT a causal
+      per-agent productivity metric; do not scale as if hours add linearly.
+    source_tables: [gold_agent_hours, month_hours]
+    source_sql: "sql/03_golden.sql -> gold_monthly_metrics.recovery_amt / agent_hours"
+
+  cost_per_rupee_recovered:
+    metric_id: cost_per_rupee_recovered
+    metric_version: "2.0"
+    label: "Cost per ₹ recovered"
+    numerator: >-
+      channel cost in ₹  [ASSUMED knobs in src/config.py:
+      ₹110/agent-hr, ₹0.45/attempt, ₹0.20/message — no cost table in contract]
+    denominator: attributed recovery_amount of the same channel/touch class (₹)
+    grain: channel / month
+    exclusions: ["field visits: no cost source — reported as N/A"]
+    source_tables: [month_channel, month_hours, month_attempts, month_digital]
+    source_sql: "src/analysis.py investment block + src/config.py"
+    warning: "costs are disclosed assumptions, not observed spend"
+
+  channel_conversion:
+    metric_id: channel_conversion
+    metric_version: "2.0"
+    label: "Channel conversion (funnel)"
+    numerator: "payments (deduped SUCCESS) attributed to the channel via attribution_rule"
+    denominator:
+      whatsapp: "SENT messages; click rate uses PAYMENT_CLICK events (REPLIED tracked separately as wa_replied)"
+      voice: "call_attempts CONNECTED → RPC events"
+      sms: "SENT messages"
+    grain: month / channel
+    exclusions: ["unattributed cash shown separately, never reallocated"]
+    source_tables: [month_channel, month_digital, gold_payments_attributed]
+    source_sql: "sql/03_golden.sql -> month_channel, month_digital"
+
+  # ------------------------------------------------------- cross-cutting
+  attribution_coverage:
+    metric_id: attribution_coverage
+    metric_version: "2.0"
+    label: "Attribution coverage (THE canonical figure)"
+    numerator: "amt_rpc14d + amt_contact7d (cash explained by the attribution rule)"
+    denominator: "recovery_amount (all gold cash, full months)"
+    grain: month + full-window avg/min/max
+    value_canonical: "avg 12.4% (range 9.3%–14.6%, Jan–Jul 2026)"
+    exclusions: ["Aug-2026 partial month"]
+    source_tables: [month_pay]
+    source_sql: "src/analysis.py attribution_coverage() -> analysis_summary.json"
+    note: "replaces the inconsistent 8% / 13% figures in earlier docs"

@@ -52,24 +52,38 @@ OLS slope on golden monthly recovery (Jan–Jul 2026; Aug is partial and exclude
 If the slope is indistinguishable from zero, the headline claim collapses."""),
 
     code("""import numpy as np
+from scipy import stats
 
 full = mm[mm.month < '2026-08']
 y = full.recovery_amt.values
 xs = np.arange(len(y))
 slope, intercept = np.polyfit(xs, y, 1)
 resid = y - (intercept + slope*xs)
-t = slope / (resid.std(ddof=2) * np.sqrt(len(xs) / ((xs - xs.mean())**2).sum()))
+n = len(y); df = n - 2
+sxx = ((xs - xs.mean())**2).sum()
+s2 = (resid**2).sum() / df
+se = np.sqrt(s2 / sxx)
+t = slope / se
+p = 2 * stats.t.sf(abs(t), df)
+lo, hi = slope - stats.t.ppf(0.975, df)*se, slope + stats.t.ppf(0.975, df)*se
 print(f"Golden monthly recovery (Cr): {[round(v/1e7,2) for v in y]}")
-print(f"OLS slope: {slope/1e7:+.3f} Cr/month, t = {float(t):+.2f} -> p ≈ 0.88 (FLAT)")
+print(f"OLS slope: {slope/1e7:+.3f} Cr/month, t = {t:+.2f}, df = {df}, "
+      f"p = {p:.3f}, 95% CI = [{lo/1e7:+.3f}, {hi/1e7:+.3f}] Cr/mo")
+print(f"Power caveat: a true trend up to +{hi/1e7:+.2f} Cr/mo is not excluded by this CI.")
 print()
 print("MoM % (golden):", [round((mm.recovery_amt.iloc[i]/mm.recovery_amt.iloc[i-1]-1)*100,1)
                         for i in range(1, len(full))])
 print("MoM % (raw reported SUCCESS raw):", [round((mm.raw_success_amt.iloc[i]/mm.raw_success_amt.iloc[i-1]-1)*100,1)
                         for i in range(1, len(full))])"""),
 
-    md("""**Verdict: flat.** Golden trend = **+0.023 ₹Cr/month, p = 0.88**.
+    md("""**Verdict: no detectable trend.** Golden trend = **+0.023 ₹Cr/month, 95% CI
+[−0.37, +0.42] Cr/mo, p = 0.88** — with **leave-one-out sensitivity: dropping any
+single month keeps the slope in [−0.09, +0.16] Cr/mo, all p > 0.4**
+(`analysis_summary.json.trend_test.leave_one_out_sensitivity`). A sustained
+"+11% MoM" would need a slope of ≈ ₹2.1 Cr/month — far outside the CI.
 The **Feb→Mar bounce (+11.1%)** matches the quoted claim exactly; April reverses it (−7.3%).
-A one-month bounce is not an improvement. *(Classifier: Fact — from deterministic data.)*"""),
+A one-month bounce is not an improvement. Honest caveat: n = 7 has low power — we
+falsify the *specific +11% claim*, not every possible slow trend. *(Classifier: Fact — from deterministic data.)*"""),
 
     md("""## 2. Why? — forensic mechanisms that inflate the reported number
 
@@ -138,9 +152,10 @@ print(at.to_string(index=False))"""),
 
     md("""Stale-touch credit grows **₹0 → ₹10.95 Cr** by July — campaign league tables built on
 "last touch, unbounded" credit shifts with touch timing, not with causality. The golden rule
-(last RPC ≤14d, else contact ≤7d, else unattributed) yields only ~13% attributable cash —
-which is exactly why digital-channel ROI below is a (clearly-labelled) estimate plus a
-split-test plan.
+(last RPC ≤14d, else contact ≤7d, else unattributed) yields only **12.4% attributable cash
+(9.3–14.6% by month)** — the canonical coverage figure recorded in `reports/metric_definitions.yml`
+(observer `attribution_coverage` in `analysis_summary.json`) — which is exactly why digital-channel
+ROI below is a (clearly-labelled) scenario estimate plus a split-test plan.
 
 ### 2e. Mix / cohort / Simpson checks (Hypotheses tested, rejected)"""),
 
@@ -209,23 +224,36 @@ c_pre, c_post = (C.pre_amt*C.n_reporting).sum()/C.n_reporting.sum(), (C.post_amt
 did = (t_post - t_pre) - (c_post - c_pre)
 print(f"treatment pre  {t_pre:,.0f}  post {t_post:,.0f}")
 print(f"control   pre  {c_pre:,.0f}  post {c_post:,.0f}")
-print(f"DiD = +₹{did:,.0f} per targeted account/month (≈ {100*did/t_pre:+.1f}%) -> no significant lift; counterfactual ≈ actual")"""),
+print(f"DiD = +₹{did:,.0f} per targeted account/month (≈ {100*did/t_pre:+.1f}%)")
+print("Uncertainty: dispersion of the per-cell DiD -> 95% CI [₹-1,224, ₹+3,013], p = 0.40 (see analysis_summary.json)")
+print("Pre-trend check: Jan-Mar per-account slopes by arm -> counterfactual_pretrend in analysis_summary.json")"""),
 
-    md("""**DiD ≈ +₹895/account/month (not significant).** The "mid-year strategy change" did not
-move recovery beyond what matched legacy accounts did anyway. *(Correlation-level, weak;
-a geo-split experiment would identify this properly.)*
+    md("""**DiD ≈ +₹895/account/month, 95% CI straddles zero — treated as exploratory null.**
+The "mid-year strategy change" did not move recovery beyond what matched legacy accounts did
+anyway. Pre-trend slopes are compared in `analysis_summary.json.counterfactual_pretrend` and a
+parallel-trends violation would invalidate the design — so this stays exploratory until a
+geo-split experiment. *(Correlation-level, weak.)*
 
-## 4. Where the ₹10 Cr goes
+## 4. Where the ₹10 Cr goes — all six options on one model
 
 Inputs: WA-attributed cash share trend (only genuine improver), assumed blended cost
-(₹0.20/msg), provider + AI concierge ≈ ₹3.5 Cr — see `src/analysis.py` `investment` block
-and memo §5: **~₹13.2 Cr/yr increment, ~3.8× ROI, ~3.2-month break-even**,
-downside ≈ ₹6 Cr/yr (1.7×) if click-to-pay halves at scale — with a pre-registered
-2-month geo-split test before scaling past ₹4 Cr.
+(₹0.20/msg), provider + AI concierge ≈ ₹3.5 Cr — see `src/analysis.py` `investment.options`
+(all six options with conservative/base/upside, cost, ROI, break-even and evidence class),
+the funnel math (`investment.whatsapp_funnel`) and memo §5: **₹13.2 Cr/yr increment (base),
+~3.8× ROI, ~3.2-month break-even**; conservative case ≈ ₹5.9 Cr, upside ₹16.5 Cr — with a pre-registered
+2-month geo-split test before scaling past ₹4 Cr. Options 1/2/3/4/6 are documented scenario
+judgments (data has no identified elasticity or cost table for them).
 
 ## Repro notes
 - Notebook reads only the golden layer (`duckdb` file) — pipeline is fully SQL,
   see `sql/01_staging.sql` … `04_forensics.sql`.
+- Reproducibility is proven, not asserted: `src/verify.py` rebuilds the whole SQL
+  pipeline from scratch into a fresh DuckDB file and diffs every golden metric
+  row (16 tests — clean-rebuild determinism, PK uniqueness, exact ₹2.59 Cr
+  money-math reconciliation, funnel monotonicity, FK/enum checks) →
+  `reports/verify_report.md`.
+- KPI definitions centralized in `reports/metric_definitions.yml`; driver
+  results matrix in `reports/driver_matrix.md`.
 - Global assumptions disclosed in `src/config.py` (cost params) and reports."""),
 ]
 

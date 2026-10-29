@@ -34,12 +34,16 @@ RAW (17 sources) → STAGING (typed views) → CLEAN (dedup / entity / tz)
 
 ## 3. Metric definitions (single source of truth)
 
-`metric_definitions.yml` holds: recovery (deduped SUCCESS, IST month),
+`reports/metric_definitions.yml` (**implemented and shipped in this repo**,
+registry_version 1.0) holds: recovery (deduped SUCCESS, IST month),
 recovery_rate (denominator = accounts opened ≤ month end), contact/RPC/PTP
 rates (per targeted account), PTP_kept (verified-cash only), recovery per
-agent-hour, cost per ₹ recovered (assumption-driven, parameterised).
-Dashboard/memo read **only** these definitions — the "reported" legacy variant
-is still computed (suffix `_legacy`) to keep the before/after bridge honest.
+agent-hour, cost per ₹ recovered (assumption-driven, parameterised),
+channel_conversion and attribution_coverage. Every entry specifies numerator,
+denominator, grain, time window, exclusions, source tables/SQL and a
+`legacy_definitions` block so the before/after bridge stays honest. The
+dashboard/memo/notebook reference its metric ids; `src/verify.py` enforces the
+uniqueness, funnel and money-math invariants behind them on every run.
 
 ## 4. Incremental processing, late data, backfills
 
