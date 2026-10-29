@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Inter, sans-serif" width="1180" height="640" viewBox="0 0 1180 640">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8f96ad"/>
+    </marker>
+    <style>
+      .lane { fill:#121821; stroke:#232b38; rx:10;}
+      .box { fill:#171f2c; stroke:#2c3648; rx:8;}
+      .gold { fill:#123f34; stroke:#2fbf85; }
+      .sched { fill:#3a2a12; stroke:#f7b32b; }
+      .lbl { fill:#d6dbe6; font-size:13px; font-weight:600;}
+      .sub { fill:#8f96ad; font-size:11px;}
+      .lane-title { fill:#aab2c8; font-size:12px; font-weight:700; letter-spacing:.5px;}
+      .flow { stroke:#8f96ad; stroke-width:1.5; fill:none; marker-end:url(#arrow);}
+      .alert { stroke:#f76f4e; stroke-dasharray:5 3;}
+    </style>
+  </defs>
+
+  <!-- title -->
+  <text x="24" y="30" fill="#e6eaf2" font-size="18" font-weight="700">Collections Recovery Analytics — Production Architecture</text>
+  <text x="24" y="50" class="sub">raw → staging → clean → golden → metrics → dashboard · DQ + lineage wired end-to-end · business clock Asia/Kolkata</text>
+
+  <!-- lane labels -->
+  <text x="30" y="96" class="lane-title">SOURCES</text>
+  <text x="30" y="250" class="lane-title">INGEST + ORCHESTRATION</text>
+  <text x="30" y="420" class="lane-title">ANALYTICAL LAYER</text>
+  <text x="30" y="560" class="lane-title">CONSUMPTION</text>
+
+  <!-- sources -->
+  <rect x="24" y="106" class="box" width="180" height="118"/>
+  <text x="40" y="128" class="lbl">OPS CORE</text>
+  <text x="40" y="146" class="sub">accounts · borrowers</text>
+  <text x="40" y="162" class="sub">account_status_history</text>
+  <text x="40" y="178" class="sub">payments (25.5k)</text>
+  <text x="40" y="194" class="sub">promises_to_pay</text>
+  <text x="40" y="210" class="sub">complaints</text>
+
+  <rect x="230" y="106" class="box" width="180" height="118"/>
+  <text x="246" y="128" class="lbl">CONTACT CENTERS</text>
+  <text x="246" y="146" class="sub">calls · call_attempts</text>
+  <text x="246" y="162" class="sub">call_dispositions (v legacy+v1+v2)</text>
+  <text x="246" y="178" class="sub">agent_sessions · agents</text>
+  <text x="246" y="194" class="sub">vendor_telephony (Airtel/…)</text>
+  <text x="246" y="210" class="sub">5 vendors · 3 timezones</text>
+
+  <rect x="436" y="106" class="box" width="180" height="118"/>
+  <text x="452" y="128" class="lbl">DIGITAL + FIELD</text>
+  <text x="452" y="146" class="sub">whatsapp_events</text>
+  <text x="452" y="162" class="sub">sms_events</text>
+  <text x="452" y="178" class="sub">field_visits</text>
+  <text x="452" y="194" class="sub">campaigns · daily_targeting</text>
+  <text x="452" y="210" class="sub">append-only landing, _ingested_at</text>
+
+  <!-- ingestion -->
+  <rect x="24" y="270" class="box" width="180" height="120"/>
+  <text x="40" y="292" class="lbl">LANDING / RAW</text>
+  <text x="40" y="310" class="sub">immutable files + run_id</text>
+  <text x="40" y="326" class="sub">freshness SLA monitors</text>
+  <text x="40" y="342" class="sub">watermark: event_at_utc</text>
+  <text x="40" y="358" class="sub">late-data window: 72h+</text>
+
+  <rect x="230" y="270" class="box" width="180" height="120"/>
+  <text x="246" y="292" class="lbl">STAGING (SQL)</text>
+  <text x="246" y="310" class="sub">all-VARCHAR first, typed casts</text>
+  <text x="246" y="326" class="sub">tz_to_utc per row (IST truth)</text>
+  <text x="246" y="342" class="sub">payments restate attribution on late rows</text>
+
+  <rect x="436" y="270" class="box" width="180" height="120"/>
+  <text x="452" y="292" class="lbl">DQ CHECK SUITE</text>
+  <text x="452" y="310" class="sub">duplicate-money sweep (block)</text>
+  <text x="452" y="326" class="sub">identity resolution audits</text>
+  <text x="452" y="342" class="sub">uniqueness + freshness gates</text>
+  <text x="452" y="358" class="sub">dq_* ledger per rule</text>
+
+  <rect x="642" y="270" class="box" width="180" height="120" style="fill:#3a2a12;stroke:#f7b32b"/>
+  <text x="658" y="292" class="lbl">ORCHESTRATOR</text>
+  <text x="658" y="310" class="sub">Airflow / cron DAG</text>
+  <text x="658" y="326" class="sub">02:00 ingest → 04:30 marts</text>
+  <text x="658" y="342" class="sub">retries, backfills by month</text>
+  <text x="658" y="358" class="sub">git SHA stamped every table</text>
+
+  <!-- golden -->
+  <rect x="24" y="440" class="gold" width="270" height="96"/>
+  <text x="40" y="462" class="lbl">GOLDEN Marts</text>
+  <text x="40" y="480" class="sub">gold_payments_attributed (dedup, tiers)</text>
+  <text x="40" y="496" class="sub">gold_accounts · gold_ptp (cash-verified)</text>
+  <text x="40" y="512" class="sub">gold_touchpoints · gold_agent_hours</text>
+  <text x="40" y="528" class="sub">clean_* entity registry</text>
+
+  <rect x="330" y="440" class="gold" width="250" height="96"/>
+  <text x="346" y="462" class="lbl">METRIC LAYER</text>
+  <text x="346" y="480" class="sub">month_* marts + funnel/rates</text>
+  <text x="346" y="496" class="sub">metric_definitions.yml (versioned)</text>
+  <text x="346" y="512" class="sub">legacy bridge: *_legacy variants</text>
+  <text x="346" y="528" class="sub">anomaly monitors (CUSUM + MAD)</text>
+
+  <rect x="616" y="440" class="box" width="200" height="96"/>
+  <text x="632" y="462" class="lbl">COUNTERFACTUAL / STATS</text>
+  <text x="632" y="480" class="sub">mix×rate decomposition</text>
+  <text x="632" y="496" class="sub">DiD exact-matching engine</text>
+  <text x="632" y="512" class="sub">quarterly strategy reads</text>
+
+  <rect x="852" y="440" class="box" width="200" height="96"/>
+  <text x="868" y="462" class="lbl">PUSH/ALERTS</text>
+  <text x="868" y="480" class="sub">SLA breach → owner page</text>
+  <text x="868" y="496" class="sub">metric break → annotate chart</text>
+  <text x="868" y="512" class="sub">definition drift → PR bridge</text>
+
+  <!-- consumption -->
+  <rect x="24" y="566" class="box" width="180" height="56"/>
+  <text x="40" y="588" class="lbl">EXEC DASHBOARD</text>
+  <text x="40" y="604" class="sub">1 screen · verdict in 60s</text>
+
+  <rect x="230" y="566" class="box" width="180" height="56"/>
+  <text x="246" y="588" class="lbl">DATA CONTRACTS</text>
+  <text x="246" y="604" class="sub">PKs + NOT-a-key rules</text>
+
+  <rect x="436" y="566" class="box" width="180" height="56"/>
+  <text x="452" y="588" class="lbl">LINEAGE (dbt docs)</text>
+  <text x="452" y="604" class="sub">every tile → sql + git SHA</text>
+
+  <rect x="642" y="566" class="box" width="180" height="56"/>
+  <text x="658" y="588" class="lbl">API / EXPORTS</text>
+  <text x="658" y="604" class="sub">data.js · parquet · SQL repo</text>
+
+  <!-- flows -->
+  <path class="flow" d="M 114 224 L 114 270"/>
+  <path class="flow" d="M 320 224 L 320 270"/>
+  <path class="flow" d="M 526 224 L 526 270"/>
+  <path class="flow" d="M 204 330 L 230 330"/>
+  <path class="flow" d="M 410 330 L 436 330"/>
+  <path class="flow" d="M 616 330 L 642 330" class="alert"/>
+  <path class="flow alert" d="M 732 390 L 732 440"/>
+  <path class="flow" d="M 294 390 L 294 440"/>
+  <path class="flow" d="M 294 488 L 330 488"/>
+  <path class="flow" d="M 580 488 L 616 488"/>
+  <path class="flow" d="M 816 488 L 852 488"/>
+  <path class="flow" d="M 350 536 L 114 566"/>
+  <path class="flow" d="M 455 536 L 320 566"/>
+  <path class="flow" d="M 660 536 L 526 566"/>
+  <path class="flow" d="M 740 536 L 732 566"/>
+</svg>

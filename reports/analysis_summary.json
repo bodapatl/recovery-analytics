@@ -1,0 +1,524 @@
+{
+  "what_happened": {
+    "months": [
+      "2026-01",
+      "2026-02",
+      "2026-03",
+      "2026-04",
+      "2026-05",
+      "2026-06",
+      "2026-07"
+    ],
+    "gold_recovery_cr": [
+      18.72,
+      17.01,
+      18.89,
+      17.51,
+      18.43,
+      17.56,
+      18.72
+    ],
+    "raw_success_cr": [
+      19.11,
+      17.41,
+      19.32,
+      17.84,
+      18.7,
+      17.87,
+      19.03
+    ],
+    "reported_all3_cr": [
+      23.21,
+      20.96,
+      23.38,
+      22.01,
+      22.69,
+      21.85,
+      23.13
+    ],
+    "gold_mom_pct": [
+      -9.1,
+      11.1,
+      -7.3,
+      5.3,
+      -4.7,
+      6.6
+    ],
+    "raw_mom_pct": [
+      -8.9,
+      11.0,
+      -7.7,
+      4.8,
+      -4.4,
+      6.5
+    ],
+    "total_gold_cr": 126.85,
+    "total_raw_success_cr": 129.29,
+    "total_raw_all3_cr": 157.23,
+    "pool_outstanding_cr": 1048.9,
+    "gold_vs_raw_gap_cr": 2.45
+  },
+  "trend_test": {
+    "gold": {
+      "slope_per_month": 0.022857142857142625,
+      "t_stat": 0.1486036775523216,
+      "p_value": 0.8818663709677381,
+      "r2": 0.004397189920816724,
+      "intercept": 18.051428571428573
+    },
+    "reportable_note": "slope in Cr/month; flat if insignificant"
+  },
+  "decomposition_jan_to_jul": {
+    "total_change_cr": 0.0,
+    "mix_effect_cr": -0.01,
+    "rate_effect_cr": 0.01,
+    "top_mix_bands": [
+      {
+        "opened_quarter": "2024Q3",
+        "dpd_band": "0-30",
+        "risk_segment": "HIGH",
+        "loan_type": "AUTO",
+        "mix_effect": -0.0,
+        "rate_effect": -0.0
+      },
+      {
+        "opened_quarter": "2024Q2",
+        "dpd_band": "0-30",
+        "risk_segment": "LOW",
+        "loan_type": "BNPL",
+        "mix_effect": -0.0,
+        "rate_effect": -0.0
+      },
+      {
+        "opened_quarter": "2024Q2",
+        "dpd_band": "0-30",
+        "risk_segment": "HIGH",
+        "loan_type": "AUTO",
+        "mix_effect": -0.0,
+        "rate_effect": -0.0
+      },
+      {
+        "opened_quarter": "2024Q3",
+        "dpd_band": "31-60",
+        "risk_segment": "HIGH",
+        "loan_type": "AUTO",
+        "mix_effect": -0.0,
+        "rate_effect": -0.0
+      },
+      {
+        "opened_quarter": "2025Q1",
+        "dpd_band": "0-30",
+        "risk_segment": "HIGH",
+        "loan_type": "AUTO",
+        "mix_effect": -0.0,
+        "rate_effect": -0.0
+      },
+      {
+        "opened_quarter": "2025Q4",
+        "dpd_band": "0-30",
+        "risk_segment": "NPA",
+        "loan_type": "CONSUMER",
+        "mix_effect": -0.0,
+        "rate_effect": -0.0
+      },
+      {
+        "opened_quarter": "2024Q4",
+        "dpd_band": "0-30",
+        "risk_segment": "HIGH",
+        "loan_type": "CREDIT_CARD",
+        "mix_effect": -0.0,
+        "rate_effect": -0.0
+      },
+      {
+        "opened_quarter": "2025Q3",
+        "dpd_band": "0-30",
+        "risk_segment": "HIGH",
+        "loan_type": "CREDIT_CARD",
+        "mix_effect": -0.0,
+        "rate_effect": -0.0
+      }
+    ]
+  },
+  "cohort_recovery_per_account": [
+    {
+      "opened_quarter": "2024Q1",
+      "jan_per_acct": 5734.2,
+      "jul_per_acct": 6529.6
+    },
+    {
+      "opened_quarter": "2024Q2",
+      "jan_per_acct": 6081.5,
+      "jul_per_acct": 6456.6
+    },
+    {
+      "opened_quarter": "2024Q3",
+      "jan_per_acct": 6571.0,
+      "jul_per_acct": 6385.4
+    },
+    {
+      "opened_quarter": "2024Q4",
+      "jan_per_acct": 5647.7,
+      "jul_per_acct": 6658.9
+    },
+    {
+      "opened_quarter": "2025Q1",
+      "jan_per_acct": 6811.9,
+      "jul_per_acct": 5440.0
+    },
+    {
+      "opened_quarter": "2025Q2",
+      "jan_per_acct": 6225.6,
+      "jul_per_acct": 6749.2
+    },
+    {
+      "opened_quarter": "2025Q3",
+      "jan_per_acct": 6265.8,
+      "jul_per_acct": 5712.1
+    },
+    {
+      "opened_quarter": "2025Q4",
+      "jan_per_acct": 6777.0,
+      "jul_per_acct": 5900.4
+    }
+  ],
+  "channel_mix_shift": {
+    "months": [
+      "2026-01",
+      "2026-02",
+      "2026-03",
+      "2026-04",
+      "2026-05",
+      "2026-06",
+      "2026-07"
+    ],
+    "attributed_cr": {
+      "m": [
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05",
+        "2026-06",
+        "2026-07"
+      ],
+      "voice": [
+        17.43,
+        15.59,
+        16.89,
+        16.04,
+        16.41,
+        16.1,
+        16.9
+      ],
+      "wa": [
+        0.46,
+        0.5,
+        0.61,
+        0.48,
+        0.64,
+        0.54,
+        0.62
+      ],
+      "sms": [
+        0.25,
+        0.33,
+        0.48,
+        0.32,
+        0.53,
+        0.32,
+        0.4
+      ],
+      "field": [
+        0.49,
+        0.48,
+        0.75,
+        0.58,
+        0.6,
+        0.5,
+        0.65
+      ]
+    },
+    "whatsapp_share_pct": [
+      2.47,
+      2.96,
+      3.26,
+      2.76,
+      3.52,
+      3.09,
+      3.34
+    ],
+    "note": "whatsapp share of gold-attributed recovery climbs ~2x; voice share drifts down"
+  },
+  "digital_funnel": {
+    "months": [
+      "2026-01",
+      "2026-02",
+      "2026-03",
+      "2026-04",
+      "2026-05",
+      "2026-06",
+      "2026-07"
+    ],
+    "wa_sent": [
+      1412,
+      1321,
+      1404,
+      1364,
+      1361,
+      1422,
+      1502
+    ],
+    "wa_click": [
+      2767,
+      2554,
+      2808,
+      2702,
+      2893,
+      2738,
+      2807
+    ],
+    "sms_sent": [
+      1590,
+      1447,
+      1650,
+      1483,
+      1643,
+      1473,
+      1657
+    ],
+    "wa_click_rate_pct": [
+      196.0,
+      193.3,
+      200.0,
+      198.1,
+      212.6,
+      192.5,
+      186.9
+    ]
+  },
+  "claim_test": {
+    "gold_mom_pct": [
+      -9.1,
+      11.1,
+      -7.3,
+      5.3,
+      -4.7,
+      6.6
+    ],
+    "raw_success_mom_pct": [
+      -8.9,
+      11.0,
+      -7.7,
+      4.8,
+      -4.4,
+      6.5
+    ],
+    "reported_all3_mom_pct": [
+      -9.7,
+      11.5,
+      -5.9,
+      3.1,
+      -3.7,
+      5.9
+    ],
+    "max_mom_observed_pct": 11.0,
+    "conclusion": null,
+    "candidate": {
+      "month": "2026-03",
+      "variant": "gold",
+      "mom_pct": 11.1,
+      "explanation": "February-to-March bounce reproduces the quoted +11% under every definition; it is a single-month fluctuation, not an improvement trend if continued forward the claim does not persist in subsequent months"
+    }
+  },
+  "denominator_probe": {
+    "recovery_per_contacted_acct_cr": [
+      19917.99,
+      19402.72,
+      19308.3,
+      18239.75,
+      18353.45,
+      17751.24,
+      17986.77
+    ],
+    "n_targeted": [
+      5732,
+      5160,
+      5666,
+      5585,
+      5800,
+      5535,
+      5666
+    ],
+    "n_contacted_all_channels": [
+      9400,
+      8769,
+      9784,
+      9602,
+      10039,
+      9890,
+      10410
+    ],
+    "contactable_over_targeted_pct": [
+      164.0,
+      169.9,
+      172.7,
+      171.9,
+      173.1,
+      178.7,
+      183.7
+    ],
+    "explanation": "contact denominator includes untargeted accounts -> contact metrics not comparable"
+  },
+  "survivorship": {
+    "n_pool_accounts_by_month": [
+      30000,
+      30000,
+      30000,
+      30000,
+      30000,
+      30000,
+      30000
+    ],
+    "verdict": "golden denominator holds every account opened <= month end; no accounts silently disappear"
+  },
+  "ptp_probe": {
+    "n_ptp_events": [
+      3166,
+      2810,
+      3187,
+      3165,
+      3266,
+      3254,
+      3404
+    ],
+    "reported_kept_rate_pct": [
+      19.2,
+      20.1,
+      19.4,
+      19.8,
+      19.4,
+      18.5,
+      18.9
+    ],
+    "verified_kept_rate_pct": [
+      3.7,
+      3.6,
+      3.7,
+      3.6,
+      4.9,
+      4.4,
+      3.6
+    ],
+    "kept_status_without_cash": [
+      585,
+      539,
+      594,
+      605,
+      603,
+      569,
+      629
+    ]
+  },
+  "attribution_probe": {
+    "unattributed_share_pct": [
+      90.7,
+      88.0,
+      86.4,
+      88.0,
+      85.4,
+      88.3,
+      86.2
+    ],
+    "stale_touch_credit_cr": [
+      0.0,
+      1.68,
+      5.09,
+      7.1,
+      8.51,
+      9.57,
+      10.95
+    ],
+    "rpc14d_credit_cr": [
+      1.31,
+      1.58,
+      1.93,
+      1.79,
+      2.07,
+      1.61,
+      1.98
+    ],
+    "contact7d_credit_cr": [
+      0.43,
+      0.46,
+      0.63,
+      0.31,
+      0.61,
+      0.44,
+      0.61
+    ],
+    "verdict": "payments have no trustworthy 'last-touch' anchor: any campaign league table built on latest-touch is noise"
+  },
+  "investment": {
+    "recommendation": "whatsapp_digital",
+    "wa_avg_monthly_cr": 0.55,
+    "wa_share_start_pct": 2.47,
+    "wa_share_end_pct": 3.34,
+    "expected_incremental_annual_cr": 13.2,
+    "estimated_cost_cr": 3.5,
+    "roi_multiple": 3.8,
+    "breakeven_months": 3.2,
+    "assumptions": [
+      "3x WhatsApp reach with current click-to-pay conversion held",
+      "assumed blend provider + concierge cost ~3.5 Cr/year",
+      "no cannibalization of voice recovery assumed (voice-attributed flat)"
+    ],
+    "downside": "if click-to-pay halves at scale, incremental ~1x (+6 Cr) and ROI ~1.7x",
+    "confidence": "medium-low: attribution is only 8% of cash; a 2-month geo split test would sharpen the estimate"
+  },
+  "counterfactual_detail": [
+    {
+      "arm": "treatment_early",
+      "count_star()": 7779
+    },
+    {
+      "arm": "treatment_late",
+      "count_star()": 3662
+    },
+    {
+      "arm": "control",
+      "count_star()": 7707
+    },
+    {
+      "arm": "mixed",
+      "count_star()": 4196
+    }
+  ],
+  "counterfactual": {
+    "design": {
+      "treatment": "accounts first targeted under modern (v2/v3) strategies AFTER Mar-2026",
+      "control": "accounts targeted only by legacy/v1 strategies through Jul-2026",
+      "matching": "exact match on risk_segment x dpd_band x loan_type",
+      "outcome": "recovery amount per targeted account per month (pre Jan-Mar vs post Apr-Jul)",
+      "identified_cells": 80,
+      "assumptions": [
+        "parallel trends between strategy arms within a matched cell",
+        "no spillover between arms",
+        "rollout timing exogenous to account quality"
+      ],
+      "limitations": [
+        "strategies run concurrently (selection not randomized)",
+        "matching is exact within discrete cells only"
+      ]
+    },
+    "recovery_per_targeted_account_inr": {
+      "treatment_pre": 15916.0,
+      "treatment_post": 22709.0,
+      "control_pre": 16068.0,
+      "control_post": 21967.0
+    },
+    "did_inr_per_account": 895.0,
+    "did_pct_of_treatment_pre": 5.6,
+    "counterfactual_monthly_recovery_cr": 17.84,
+    "actual_monthly_recovery_apr_jul_cr": null
+  }
+}

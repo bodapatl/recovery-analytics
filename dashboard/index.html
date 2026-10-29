@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recovery Forensics — Executive Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Collections Recovery — “Is the reported +11% MoM real?”</h1>
+      <div class="subtitle">
+        Golden-dataset forensics over 12 months of collections data · recovery-analytics ·
+        portfolio outstanding <b id="portfolio-outstanding" style="color:var(--text)"></b>
+      </div>
+      <div class="subtitle" id="meta-window"></div>
+    </div>
+    <div class="badge" id="badge-verdict"><small>reported claim vs golden dataset</small></div>
+  </header>
+
+  <section id="kpi-strip"></section>
+
+  <p id="verdict-detail" class="card verdict-box" style="margin-bottom:14px"></p>
+
+  <div class="grid grid-2-1">
+    <div class="card">
+      <div class="panel-title">Reported vs golden monthly recovery</div>
+      <div class="panel-sub">raw SUCCESS cash (incl. double-posted rows) vs deduplicated golden recovery, with golden MoM % — the quoted +11% is the Feb→Mar bounce, not a trend</div>
+      <div class="chart-box tall"><canvas id="chart-main"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="panel-title">Recovery funnel (avg / month)</div>
+      <div class="panel-sub">targeted → contacted → RPC → PTP → cash-verified → paying</div>
+      <div id="funnel"></div>
+    </div>
+  </div>
+
+  <div class="grid grid-1-1-1">
+    <div class="card">
+      <div class="panel-title">Attributed recovery by channel</div>
+      <div class="panel-sub">golden attribution (last RPC ≤14d) — WhatsApp is the only channel growing its share of cash</div>
+      <div class="chart-box short"><canvas id="chart-channel"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="panel-title">PTP kept rate: reported vs cash-verified</div>
+      <div class="panel-sub">“KEPT” statuses without any payment are promises, not money</div>
+      <div class="chart-box short"><canvas id="chart-ptp"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="panel-title">Attribution drift (legacy logic)</div>
+      <div class="panel-sub">credit under “latest touch, unbounded window” accumulates on stale touches</div>
+      <div class="chart-box short"><canvas id="chart-attrib"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid grid-1-1">
+    <div class="card">
+      <div class="panel-title">Counterfactual: without the mid-year targeting change</div>
+      <div class="panel-sub">difference-in-differences, exact-matched cells · see executive memo §4</div>
+      <div id="cf-design" class="panel-sub" style="margin-bottom:8px"></div>
+      <div class="chart-box short"><canvas id="chart-cf"></canvas></div>
+      <p id="cf-verdict" style="margin-top:10px;font-size:12.6px"></p>
+    </div>
+    <div class="card">
+      <div class="panel-title">Where should the ₹10 Cr go?</div>
+      <div class="panel-sub">decision with ROI, break-even, downside &amp; confidence — assumptions disclosed</div>
+      <div id="invest-body"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px">
+    <div class="panel-title">Data-quality forensics (raised this cycle)</div>
+    <div class="panel-sub">full detail: reports/data_quality_report.md</div>
+    <table class="dq">
+      <thead><tr><th>Severity</th><th>Finding</th><th>Business impact</th><th>Status</th></tr></thead>
+      <tbody id="dq-table"></tbody>
+    </table>
+  </div>
+
+  <footer id="footer-defs"></footer>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
