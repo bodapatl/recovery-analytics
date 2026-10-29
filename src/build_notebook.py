@@ -70,7 +70,7 @@ lo, hi = slope - stats.t.ppf(0.975, df)*se, slope + stats.t.ppf(0.975, df)*se
 print(f"Golden monthly recovery (Cr): {[round(v/1e7,2) for v in y]}")
 print(f"OLS slope: {slope/1e7:+.3f} Cr/month, t = {t:+.2f}, df = {df}, "
       f"p = {p:.3f}, 95% CI = [{lo/1e7:+.3f}, {hi/1e7:+.3f}] Cr/mo")
-print(f"Power caveat: a true trend up to +{hi/1e7:+.2f} Cr/mo is not excluded by this CI.")
+print(f"Power caveat: a true trend up to {hi/1e7:+.2f} Cr/mo is not excluded by this CI.")
 # calendar-aware view: the quoted '+11% MoM' is manufactured by a 28-day February
 days = np.array([pd.Period(m).days_in_month for m in mm.month])[:len(full)]
 per_day = y / 1e7 / days
