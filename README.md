@@ -149,3 +149,4 @@ Full engineering design: [`reports/production_design.md`].
 verified against control groups) / **Correlation** (no clean identification) /
 **Hypothesis** (injected and tested, rejected where noted). The memo maps every
 major claim to one of these.
+![image.alt](https://github.com/bodapatl/recovery-analytics/blob/2856d44903902b8b1796bf493842a8d960deab79/Screenshot%202026-10-29%20112428.png)
