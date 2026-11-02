@@ -18,7 +18,7 @@ promise rate reported at ~18–19% but cash-verified at **~3.6%**, 56% of calls
 in wrong hour buckets, and attribution logic that drifts **₹0 → ₹10.95 Cr/month**
 onto stale touches by July (only **12.4%** of golden cash — 9.3–14.6% by month —
 obeys the 14-day attribution rule).
-
+![image.alt](https://github.com/bodapatl/recovery-analytics/blob/fbfe1f41abe1d452d1ea4739e262090fded0f1a5/Screenshot%202026-11-02%20095415.png)
 Full story: [`reports/executive_memo.md`](reports/executive_memo.md) (2 pages) ·
 dashboard: [`dashboard/index.html`](dashboard/index.html) ·
 data quality: [`reports/data_quality_report.md`](reports/data_quality_report.md) ·
@@ -41,7 +41,7 @@ production design: [`reports/production_design.md`](reports/production_design.md
 | Investment appendix (6 options, placebo, sizing) | `reports/appendix_investment_and_counterfactual.md` |
 | Driver analysis (all brief dimensions) | `reports/driver_matrix.md` — 53-row results matrix with n, effect, evidence class (incl. language: N/A — no column; loan_type as client proxy) |
 | Reproducibility proof | `src/verify.py` → `reports/verify_report.md` (16 tests: clean-rebuild determinism, PK uniqueness, ₹2.59 Cr money-math reconciliation, funnel monotonicity, FK/enum checks) |
-
+![image.alt](https://github.com/bodapatl/recovery-analytics/blob/fbfe1f41abe1d452d1ea4739e262090fded0f1a5/Screenshot%202026-11-02%20095428.png)
 ## The data
 
 `data/raw/` holds the 17 published datasets (30k accounts; calls, attempts,
@@ -51,6 +51,7 @@ the vendor data dictionary). Known injected hazards: duplicates, missing values,
 conflicting timestamps (3 timezones), inconsistent ids, late-arriving events,
 schema/disposition-code changes, duplicate payment events, overwritten status
 history, agent identity chaos — all handled with documented, quantified rules.
+![image.alt](https://github.com/bodapatl/recovery-analytics/blob/fbfe1f41abe1d452d1ea4739e262090fded0f1a5/Screenshot%202026-11-02%20095439.png)
 
 ## Key forensic findings (numbers from the golden layer)
 
@@ -75,6 +76,7 @@ history, agent identity chaos — all handled with documented, quantified rules.
    targeted account/month (≈+5.6%; 95% CI [−₹1,224, +₹3,013], p = 0.40 —
    exploratory)**; pre-trend check supports the design; counterfactual Jan–Jul
    without the change ≈ ₹17.8 Cr/month vs ~₹18–19 Cr actual.
+   ![image.alt](https://github.com/bodapatl/recovery-analytics/blob/fbfe1f41abe1d452d1ea4739e262090fded0f1a5/Screenshot%202026-11-02%20095501.png)
 
 ## Where the ₹10 Cr goes
 
